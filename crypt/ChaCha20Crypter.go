@@ -79,3 +79,7 @@ func (c ChaCha20Crypter) CalcKey(password string, salt []byte) ([]byte, error) {
 
 	return derived, nil
 }
+
+func (c ChaCha20Crypter) SetKeys(private, public []byte) {
+	c.Key = private
+}

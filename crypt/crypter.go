@@ -15,4 +15,5 @@ type Crypter interface {
 	GenKey() []byte
 	DeriveKey(password string) ([]byte, []byte, error)
 	CalcKey(password string, salt []byte) ([]byte, error)
+	SetKeys(private, public []byte)
 }
