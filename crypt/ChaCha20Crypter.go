@@ -56,6 +56,11 @@ func (c ChaCha20Crypter) Decrypt(cipherText, nonce []byte) ([]byte, error) {
 	return plainText, nil
 }
 
+func (c ChaCha20Crypter) GenKey() []byte {
+	key := RandBytes(chacha20poly1305.KeySize)
+	return key
+}
+
 func (c ChaCha20Crypter) DeriveKey(password string) ([]byte, []byte, error) {
 	salt := RandBytes(16)
 	derived, err := scrypt.Key([]byte(password), salt, 1<<16, 8, 1, chacha20poly1305.KeySize)
@@ -64,4 +69,13 @@ func (c ChaCha20Crypter) DeriveKey(password string) ([]byte, []byte, error) {
 	}
 
 	return derived, salt, nil
+}
+
+func (c ChaCha20Crypter) CalcKey(password string, salt []byte) ([]byte, error) {
+	derived, err := scrypt.Key([]byte(password), salt, 1<<16, 8, 1, chacha20poly1305.KeySize)
+	if err != nil {
+		return nil, err
+	}
+
+	return derived, nil
 }
