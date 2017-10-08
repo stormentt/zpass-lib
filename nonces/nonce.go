@@ -2,18 +2,18 @@ package nonces
 
 import (
 	"time"
-	"zpass-lib/crypt"
+	"zpass-lib/random"
 )
 
 type Nonce struct {
 	Value string
-	Time  int64 `json:"nonce-time"`
+	Time  int64
 }
 
-func Make() Nonce {
+func Make() (Nonce, error) {
 	var n Nonce
-	n.Value = crypt.RandStr(32)
+	n.Value, err = random.AlphaNum(32)
 	n.Time = time.Now().Unix()
 
-	return n
+	return n, err
 }

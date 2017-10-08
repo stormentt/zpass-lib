@@ -12,7 +12,7 @@ type AsymmetricCrypter struct {
 type Crypter interface {
 	Encrypt(plain []byte) ([]byte, error)
 	Decrypt(encrypted []byte) ([]byte, error)
-	GenKey() []byte
+	GenKey() ([]byte, error)
 	DeriveKey(password string) ([]byte, []byte, error)
 	CalcKey(password string, salt []byte) ([]byte, error)
 	SetKeys(private, public []byte)

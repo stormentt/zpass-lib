@@ -7,5 +7,5 @@ type SymmetricHasher struct {
 type Hasher interface {
 	Digest(message []byte) []byte
 	Verify(message, testMAC []byte) bool
-	GenKey() []byte
+	GenKey() ([]byte, error)
 }

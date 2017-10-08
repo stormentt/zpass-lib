@@ -3,6 +3,7 @@ package crypt
 import (
 	"crypto/hmac"
 	"crypto/sha512"
+	"zpass-lib/random"
 )
 
 type Sha512Hasher struct {
@@ -21,7 +22,7 @@ func (h Sha512Hasher) Verify(message, testMac []byte) bool {
 	return hmac.Equal(testMac, expectedMAC)
 }
 
-func (h Sha512Hasher) GenKey() []byte {
-	key := RandBytes(sha512.BlockSize)
-	return key
+func (h Sha512Hasher) GenKey() ([]byte, error) {
+	key, err := random.Bytes(sha512.BlockSize)
+	return key, err
 }
