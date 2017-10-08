@@ -1,7 +1,7 @@
 package slices
 
 // combine combines all the byte slices into one big byte slice
-func combine(slices ...[]byte) []byte {
+func Combine(slices ...[]byte) []byte {
 	var length int
 	for _, slice := range slices {
 		length += len(slice)
