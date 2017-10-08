@@ -10,14 +10,14 @@ type ChaCha20Crypter struct {
 	SymmetricCrypter
 }
 
-func (c ChaCha20Crypter) Encrypt(plain []byte) ([]byte, []byte, error) {
+func (c ChaCha20Crypter) Encrypt(plain []byte) ([]byte, error) {
 	cipher, err := chacha20poly1305.New(c.Key)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"cipher": "chacha20poly1305",
 			"error":  err,
 		}).Error("Error encrypting text")
-		return nil, nil, err
+		return nil, err
 	}
 
 	nonce := RandBytes(chacha20poly1305.NonceSize)
@@ -27,15 +27,16 @@ func (c ChaCha20Crypter) Encrypt(plain []byte) ([]byte, []byte, error) {
 				"cipher": "chacha20poly1305",
 				"error":  "Nonce size incorrect",
 			}).Error("Error encrypting text")
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
 	cipherText := cipher.Seal(nil, nonce, plain, nil)
-	return cipherText, nonce, nil
+	return append(nonce, cipherText), nil
 }
 
-func (c ChaCha20Crypter) Decrypt(cipherText, nonce []byte) ([]byte, error) {
+func (c ChaCha20Crypter) Decrypt(encrypted []byte) ([]byte, error) {
+	//TODO: Better name for encrypted
 	cipher, err := chacha20poly1305.New(c.Key)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -44,6 +45,9 @@ func (c ChaCha20Crypter) Decrypt(cipherText, nonce []byte) ([]byte, error) {
 		}).Error("Error decrypting text")
 		return nil, err
 	}
+
+	nonce := encrypted[:chacha20poly1305.NonceSize]
+	cipherText := encrypted[chacha20poly1305.NonceSize:]
 
 	plainText, err := cipher.Open(nil, nonce, cipherText, nil)
 	if err != nil {
