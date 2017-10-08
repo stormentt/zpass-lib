@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/scrypt"
+	"zpass-lib/util/slices"
 )
 
 type ChaCha20Crypter struct {
@@ -14,8 +15,9 @@ func (c ChaCha20Crypter) Encrypt(plain []byte) ([]byte, error) {
 	cipher, err := chacha20poly1305.New(c.Key)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"cipher": "chacha20poly1305",
-			"error":  err,
+			"cipher":  "chacha20poly1305",
+			"error":   err,
+			"keySize": len(c.Key),
 		}).Error("Error encrypting text")
 		return nil, err
 	}
@@ -32,7 +34,7 @@ func (c ChaCha20Crypter) Encrypt(plain []byte) ([]byte, error) {
 	}
 
 	cipherText := cipher.Seal(nil, nonce, plain, nil)
-	return append(nonce, cipherText), nil
+	return slices.Combine(nonce, cipherText), nil
 }
 
 func (c ChaCha20Crypter) Decrypt(encrypted []byte) ([]byte, error) {
@@ -84,6 +86,6 @@ func (c ChaCha20Crypter) CalcKey(password string, salt []byte) ([]byte, error) {
 	return derived, nil
 }
 
-func (c ChaCha20Crypter) SetKeys(private, public []byte) {
+func (c *ChaCha20Crypter) SetKeys(private, public []byte) {
 	c.Key = private
 }

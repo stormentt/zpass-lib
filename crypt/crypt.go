@@ -43,17 +43,17 @@ func NewHasher(private, public []byte) Hasher {
 	case "sha512":
 		var hasher Sha512Hasher
 		hasher.Key = private
-		return hasher
+		return &hasher
 	}
 	return nil
 }
 
 func NewCrypter(private, public []byte) Crypter {
-	switch ConfigHasher {
+	switch ConfigCrypter {
 	case "chacha20poly1305":
 		var crypter ChaCha20Crypter
 		crypter.Key = private
-		return crypter
+		return &crypter
 	}
 	return nil
 }

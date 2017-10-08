@@ -20,3 +20,8 @@ func (h Sha512Hasher) Verify(message, testMac []byte) bool {
 	expectedMAC := h.Digest(message)
 	return hmac.Equal(testMac, expectedMAC)
 }
+
+func (h Sha512Hasher) GenKey() []byte {
+	key := RandBytes(sha512.BlockSize)
+	return key
+}
