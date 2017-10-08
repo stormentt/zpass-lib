@@ -6,14 +6,14 @@ import (
 )
 
 type Nonce struct {
-	Nonce     string
-	NonceTime int64 `json:"nonce-time"`
+	Value string
+	Time  int64 `json:"nonce-time"`
 }
 
 func Make() Nonce {
 	var n Nonce
-	n.Nonce = crypt.RandStr(32)
-	n.NonceTime = time.Now().Unix()
+	n.Value = crypt.RandStr(32)
+	n.Time = time.Now().Unix()
 
 	return n
 }
