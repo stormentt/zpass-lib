@@ -57,7 +57,7 @@ func TestNesting(t *testing.T) {
 func TestFilling(t *testing.T) {
 	c, err := canister.Fill(`{"this": 5, "is":{"a":"test"}}`)
 	if err != nil {
-		t.Error("Filling isn't working: %v", err)
+		t.Errorf("Filling isn't working: %v", err)
 	}
 	gotThis, _ := c.GetInt("this")
 	gotTest, _ := c.GetString("is.a")
