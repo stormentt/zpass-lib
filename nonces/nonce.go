@@ -12,6 +12,7 @@ type Nonce struct {
 
 func Make() (Nonce, error) {
 	var n Nonce
+	var err error
 	n.Value, err = random.AlphaNum(32)
 	n.Time = time.Now().Unix()
 
