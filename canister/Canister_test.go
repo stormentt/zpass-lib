@@ -1,4 +1,4 @@
-package main_test
+package canister_test
 
 import (
 	"testing"

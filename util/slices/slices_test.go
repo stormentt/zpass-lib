@@ -1,4 +1,4 @@
-package main_test
+package slices_test
 
 import (
 	"bytes"

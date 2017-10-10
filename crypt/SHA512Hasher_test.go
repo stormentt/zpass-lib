@@ -1,4 +1,4 @@
-package main_test
+package crypt_test
 
 import (
 	"crypto/sha512"
