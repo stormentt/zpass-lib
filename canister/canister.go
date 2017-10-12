@@ -2,6 +2,9 @@ package canister
 
 import (
 	"github.com/spf13/cast"
+	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 	"zpass-lib/util"
 )
@@ -16,6 +19,23 @@ func New() *Canister {
 	return &c
 }
 
+func (c *Canister) Release(w io.Writer) (int, error) {
+	json, err := util.EncodeJson(c.Contents)
+	if err != nil {
+		return 0, err
+	}
+
+	return w.Write([]byte(json))
+}
+
+func (c *Canister) ToJson() (string, error) {
+	json, err := util.EncodeJson(c.Contents)
+	if err != nil {
+		return "", err
+	}
+	return json, nil
+}
+
 func Fill(input string) (*Canister, error) {
 	tempMap := make(map[string]interface{})
 	err := util.DecodeJson(input, &tempMap)
@@ -28,6 +48,21 @@ func Fill(input string) (*Canister, error) {
 	return &c, nil
 }
 
+func FillFrom(path string) (*Canister, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return Fill(string(bytes))
+}
+
 func (c *Canister) Get(property string) interface{} {
 	properties := strings.Split(property, ".")
 	return c.find(properties, c.Contents)
@@ -36,6 +71,11 @@ func (c *Canister) Get(property string) interface{} {
 func (c *Canister) GetString(property string) (string, error) {
 	found := c.Get(property)
 	return cast.ToStringE(found)
+}
+
+func (c *Canister) GetBytes(property string) ([]byte, error) {
+	str, _ := c.GetString(property)
+	return util.DecodeB64(str)
 }
 
 func (c *Canister) GetInt(property string) (int64, error) {
