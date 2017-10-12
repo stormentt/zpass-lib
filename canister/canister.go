@@ -38,9 +38,9 @@ func (c *Canister) GetString(property string) (string, error) {
 	return cast.ToStringE(found)
 }
 
-func (c *Canister) GetInt(property string) (int, error) {
+func (c *Canister) GetInt(property string) (int64, error) {
 	found := c.Get(property)
-	return cast.ToIntE(found)
+	return cast.ToInt64E(found)
 }
 
 func (c *Canister) GetFloat(property string) (float64, error) {
