@@ -6,8 +6,8 @@ import (
 )
 
 type Nonce struct {
-	Value string
-	Time  int64
+	Value string `json:"value"`
+	Time  int64  `json:"time"`
 }
 
 func Make() (Nonce, error) {
