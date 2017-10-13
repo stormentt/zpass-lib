@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+//EncodeJson encodes an object into a json string
 func EncodeJson(object interface{}) (string, error) {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(object)
@@ -15,6 +16,7 @@ func EncodeJson(object interface{}) (string, error) {
 	return buf.String(), nil
 }
 
+//DecodeJson decodes a json string into the given interface
 func DecodeJson(message string, object interface{}) error {
 	decoder := json.NewDecoder(strings.NewReader(message))
 	err := decoder.Decode(object)

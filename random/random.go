@@ -1,3 +1,4 @@
+//Package random provides functions for generating random values
 package random
 
 import (
@@ -40,6 +41,7 @@ func Int(max int64) (int64, error) {
 	return randInt.Int64(), nil
 }
 
+// AlphaNum returns a mixed-case alphanumeric string of the specified length
 func AlphaNum(length int) (string, error) {
 	alphanumeric := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
