@@ -94,7 +94,7 @@ func (c *Canister) GetString(property string) (string, bool) {
 func (c *Canister) GetBytes(property string) ([]byte, error) {
 	str, ok := c.GetString(property)
 	if ok == false {
-		return []byte{}, nil
+		return nil, nil
 	}
 	bytes, err := util.DecodeB64(str)
 	if err != nil {
