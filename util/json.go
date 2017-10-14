@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -11,6 +12,10 @@ func EncodeJson(object interface{}) (string, error) {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(object)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"Object": object,
+			"Error":  err,
+		}).Debug("Unable to encode json object")
 		return "", err
 	}
 	return buf.String(), nil
@@ -20,5 +25,12 @@ func EncodeJson(object interface{}) (string, error) {
 func DecodeJson(message string, object interface{}) error {
 	decoder := json.NewDecoder(strings.NewReader(message))
 	err := decoder.Decode(object)
-	return err
+	if err != nil {
+		log.WithFields(log.Fields{
+			"String": message,
+			"Error":  err,
+		}).Debug("Unable to decode json string")
+		return err
+	}
+	return nil
 }
