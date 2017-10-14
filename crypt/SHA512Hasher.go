@@ -3,7 +3,7 @@ package crypt
 import (
 	"crypto/hmac"
 	"crypto/sha512"
-	"zpass-lib/random"
+	"github.com/stormentt/zpass-lib/random"
 )
 
 type Sha512Hasher struct {

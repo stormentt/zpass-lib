@@ -3,7 +3,7 @@ package slices_test
 import (
 	"bytes"
 	"testing"
-	"zpass-lib/util/slices"
+	"github.com/stormentt/zpass-lib/util/slices"
 )
 
 func TestCombine(t *testing.T) {

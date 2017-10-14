@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"golang.org/x/crypto/chacha20poly1305"
 	"testing"
-	"zpass-lib/crypt"
+	"github.com/stormentt/zpass-lib/crypt"
 )
 
 func TestKeyGen(t *testing.T) {

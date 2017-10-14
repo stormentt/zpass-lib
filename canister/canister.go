@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"zpass-lib/util"
+	"github.com/stormentt/zpass-lib/util"
 )
 
 type Canister struct {

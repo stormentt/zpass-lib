@@ -2,7 +2,7 @@ package nonces
 
 import (
 	"time"
-	"zpass-lib/random"
+	"github.com/stormentt/zpass-lib/random"
 )
 
 //Nonce is a Value & Time pair for use as a guard against replay attacks

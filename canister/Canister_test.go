@@ -2,8 +2,8 @@ package canister_test
 
 import (
 	"testing"
-	"zpass-lib/canister"
-	"zpass-lib/util"
+	"github.com/stormentt/zpass-lib/canister"
+	"github.com/stormentt/zpass-lib/util"
 )
 
 func TestCanister(t *testing.T) {

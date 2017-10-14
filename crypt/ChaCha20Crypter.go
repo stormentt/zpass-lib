@@ -3,8 +3,8 @@ package crypt
 import (
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/scrypt"
-	"zpass-lib/random"
-	"zpass-lib/util/slices"
+	"github.com/stormentt/zpass-lib/random"
+	"github.com/stormentt/zpass-lib/util/slices"
 )
 
 type ChaCha20Crypter struct {

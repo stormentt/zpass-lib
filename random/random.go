@@ -4,7 +4,7 @@ package random
 import (
 	"crypto/rand"
 	"math/big"
-	"zpass-lib/util"
+	"github.com/stormentt/zpass-lib/util"
 )
 
 // Bytes returns a random byte slice of length n

@@ -3,7 +3,7 @@ package crypt_test
 import (
 	"crypto/sha512"
 	"testing"
-	"zpass-lib/crypt"
+	"github.com/stormentt/zpass-lib/crypt"
 )
 
 func TestGenKey(t *testing.T) {
