@@ -2,6 +2,8 @@
 package canister
 
 import (
+	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"io"
 	"io/ioutil"
@@ -25,6 +27,11 @@ func New() *Canister {
 func (c *Canister) Release(w io.Writer) error {
 	encoder := json.NewEncoder(w)
 	err := encoder.Encode(c.Contents)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Error": err,
+		}).Debug("Unable to release canister")
+	}
 	return err
 }
 
@@ -75,15 +82,25 @@ func (c *Canister) Get(property string) interface{} {
 }
 
 // GetString retrieves the specified property & casts it to string
-func (c *Canister) GetString(property string) (string, error) {
+func (c *Canister) GetString(property string) (string, bool) {
 	found := c.Get(property)
-	return cast.ToStringE(found)
+	if found == nil {
+		return "", false
+	}
+	return cast.ToString(found), true
 }
 
 // GetBytes retrieves the specified property & attempts to decode it from Base64 into bytes
 func (c *Canister) GetBytes(property string) ([]byte, error) {
-	str, _ := c.GetString(property)
-	return util.DecodeB64(str)
+	str, ok := c.GetString(property)
+	if ok == false {
+		return []byte{}, nil
+	}
+	bytes, err := util.DecodeB64(str)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
 }
 
 // GetInt retrieves the specified property & attempts to cast it as an int64
