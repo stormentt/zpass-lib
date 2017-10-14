@@ -81,6 +81,15 @@ func (c *Canister) Get(property string) interface{} {
 	return c.find(properties, c.Contents)
 }
 
+// Has returns true if the canister has that property, false otherwise
+func (c *Canister) Has(property string) bool {
+	value := c.Get(property)
+	if value == nil {
+		return false
+	}
+	return true
+}
+
 // GetString retrieves the specified property & casts it to string
 func (c *Canister) GetString(property string) (string, bool) {
 	found := c.Get(property)
