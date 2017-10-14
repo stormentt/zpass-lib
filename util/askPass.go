@@ -12,5 +12,6 @@ func AskPass(prompt string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	fmt.Println("")
 	return string(input), nil
 }
