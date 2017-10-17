@@ -1,10 +1,10 @@
 package crypt
 
 import (
-	"golang.org/x/crypto/chacha20poly1305"
-	"golang.org/x/crypto/scrypt"
 	"github.com/stormentt/zpass-lib/random"
 	"github.com/stormentt/zpass-lib/util/slices"
+	"golang.org/x/crypto/chacha20poly1305"
+	"golang.org/x/crypto/scrypt"
 )
 
 type ChaCha20Crypter struct {
@@ -49,7 +49,7 @@ func (c ChaCha20Crypter) GenKey() ([]byte, error) {
 }
 
 func (c ChaCha20Crypter) DeriveKey(password string) ([]byte, []byte, error) {
-	salt, err := random.Bytes(16)
+	salt, err := random.Bytes(32)
 	if err != nil {
 		return nil, nil, err
 	}
