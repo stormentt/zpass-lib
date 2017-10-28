@@ -1,17 +1,19 @@
-// Package Canister provides easy methods to manipulate arbitrary JSON objects
+// Package canister provides easy methods to manipulate arbitrary JSON objects
 package canister
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cast"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"github.com/stormentt/zpass-lib/util"
 )
 
+// Canister contains a map which is converted to & from JSON
 type Canister struct {
 	Contents map[string]interface{}
 }
@@ -35,8 +37,8 @@ func (c *Canister) Release(w io.Writer) error {
 	return err
 }
 
-// ToJson returns the result of encoding the canister's contents to json
-func (c *Canister) ToJson() (string, error) {
+// ToJSON returns the result of encoding the canister's contents to json
+func (c *Canister) ToJSON() (string, error) {
 	json, err := util.EncodeJson(c.Contents)
 	if err != nil {
 		return "", err

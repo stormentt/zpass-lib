@@ -2,6 +2,7 @@ package canister_test
 
 import (
 	"testing"
+
 	"github.com/stormentt/zpass-lib/canister"
 	"github.com/stormentt/zpass-lib/util"
 )
