@@ -1,7 +1,9 @@
+// Package nonces provides functions for generating unique nonces for use in APIs
 package nonces
 
 import (
 	"time"
+
 	"github.com/stormentt/zpass-lib/random"
 )
 

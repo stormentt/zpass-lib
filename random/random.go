@@ -1,4 +1,4 @@
-//Package random provides functions for generating random values
+//Package random provides functions for generating cryptographically secure random values
 package random
 
 import (
