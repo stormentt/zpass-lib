@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	KeySize = 64
+	KeySize       = 64
+	FileChunkSize = 128 * 1024
 )
 
 // Package XSalsa20 provides a crypter for encrypting/decrypting data with XSalsa20.
@@ -214,7 +215,7 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 	}
 
 	//TODO: Make this configurable instead of just 64KiB chunks
-	data := make([]byte, 64*1024)
+	data := make([]byte, FileChunkSize)
 	for {
 		n, err := in.Read(data)
 		if err != nil {
@@ -306,7 +307,7 @@ func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 	authKey := c.Key[32:]
 	mac := hmac.New(sha512.New, authKey)
 	mac.Write(nonce)
-	data := make([]byte, 64*1024)
+	data := make([]byte, FileChunkSize)
 	for {
 		n, err := in.Read(data)
 		if err != nil {
