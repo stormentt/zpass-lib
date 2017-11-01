@@ -32,9 +32,10 @@ func Create(key []byte) (*ChaCha20Crypter, error) {
 		if len(key) != chacha20poly1305.KeySize {
 			err := errors.New("Key size incorrect")
 			log.WithFields(log.Fields{
-				"error":   err,
-				"crypter": "ChaCha20-Poly1305",
-				"size":    len(key),
+				"error":    err,
+				"crypter":  "ChaCha20-Poly1305",
+				"size":     len(key),
+				"expected": chacha20poly1305.KeySize,
 			}).Debug("Error creating crypter")
 			return nil, err
 		}
@@ -138,4 +139,11 @@ func (c *ChaCha20Crypter) CalcKey(password, salt []byte) (err error) {
 		return errors.Wrap(err, "Error calculating key")
 	}
 	return nil
+}
+
+func (c *ChaCha20Crypter) EncryptFile(inFile, outFile string) (err error) {
+	return errors.New("Not implemented")
+}
+func (c *ChaCha20Crypter) DecryptFile(inFile, outFile string) (err error) {
+	return errors.New("Not implemented")
 }
