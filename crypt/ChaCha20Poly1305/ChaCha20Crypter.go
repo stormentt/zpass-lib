@@ -1,9 +1,9 @@
-package ChaCha20Poly1305
-
 // Package ChaCha20Poly1305 provides a crypter for encrypting/decrypting data with ChaCha20-Poly1305
 // ChaCha20-Poly1305 loses message authenticity if nonces are repeated.
 // 12 bytes is arguably not long enough to guarantee this won't happen when generating by random bytes.
 // Eventually I'll figure out how to make it use a counter instead. For now use the secretbox crypter
+package ChaCha20Poly1305
+
 import (
 	"github.com/pkg/errors"
 
