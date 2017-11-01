@@ -24,7 +24,7 @@ func NewHasher(private, public []byte) (Hasher, error) {
 		log.WithFields(log.Fields{
 			"error":  "Invalid hasher",
 			"hasher": ConfigHasher,
-		}).Error("Invalid hasher requested")
+		}).Debug("Invalid hasher requested")
 		return nil, errors.New("Invalid hasher")
 	}
 }
@@ -39,7 +39,7 @@ func NewCrypter(private, public []byte) (Crypter, error) {
 		log.WithFields(log.Fields{
 			"error":   "Invalid crypter",
 			"crypter": ConfigCrypter,
-		}).Error("Invalid crypter requested")
+		}).Debug("Invalid crypter requested")
 		return nil, errors.New("Invalid crypter")
 	}
 }
