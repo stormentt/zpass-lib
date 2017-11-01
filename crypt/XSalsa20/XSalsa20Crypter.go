@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	KeySize       = 64
-	FileChunkSize = 128 * 1024
+	KeySize       = 64         //Minimum of 512 bits, 256 for encryption & 256 for MAC
+	FileChunkSize = 128 * 1024 // 128 KiB
 )
 
 type XSalsa20Crypter struct {
