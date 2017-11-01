@@ -214,7 +214,6 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 		return errors.Wrap(err, "Error encrypting file")
 	}
 
-	//TODO: Make this configurable instead of just 64KiB chunks
 	data := make([]byte, FileChunkSize)
 	for {
 		n, err := in.Read(data)
@@ -358,9 +357,6 @@ func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 		binary.LittleEndian.PutUint32(counterBytes, counter)
 		data = data[:n]
 
-		//var combinedNonce [24]byte
-		//copy(combinedNonce[:20], nonce[:])
-		//copy(combinedNonce[20:], counterBytes[:])
 		combinedNonce := slices.Combine(nonce, counterBytes)
 		salsa20.XORKeyStream(data, data, combinedNonce, &encKey)
 
