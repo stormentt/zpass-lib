@@ -4,6 +4,8 @@ package random
 import (
 	"crypto/rand"
 	"math/big"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/stormentt/zpass-lib/util"
 )
 
@@ -13,6 +15,9 @@ func Bytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Debug("Error generating random bytes")
 		return nil, err
 	}
 
@@ -35,6 +40,9 @@ func Int(max int64) (int64, error) {
 	bigMax := big.NewInt(max)
 	randInt, err := rand.Int(rand.Reader, bigMax)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Debug("Error generating random integer")
 		return 0, err
 	}
 
