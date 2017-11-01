@@ -12,7 +12,7 @@ canister.Get("server.database.host")
 ### Cryptography interfaces
 Zpass-lib provides two interfaces for cryptography: Crypter & Hasher. 
 Both come with functions to generate/derive appropriately sized keys & nonces.
-I intend to support more than just ChaCha20-Poly1305 and HMAC-SHA512. Currently the library is structured to allow for asymmetric crypto but I'm not sure if that'll be a feature.
+I intend to support more than just ChaCha20-Poly1305 and HMAC-SHA512. Asymmetric cryptography support is on the way. 
 ```
 Crypter.Encrypt("message")
 ```
