@@ -272,7 +272,7 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 
 // DecryptFile decrypts inFile and writes the result to outFile
 // outFile will be truncated if it already exists
-// Before we do any decription, we check the HMAC of the encrypted file. We refuse to decrypt if there's a problem.
+// Before we do any decryption, we check the HMAC of the encrypted file. We refuse to decrypt if there's a problem.
 func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 	in, err := os.Open(inFile)
 	if err != nil {
