@@ -1,10 +1,10 @@
-package XSalsa20
-
 // Package XSalsa20 provides a crypter for encrypting/decrypting data with XSalsa20.
 // We use SHA512-HMAC with a seperate key to provide messenge integrity
 // XSalsa20 uses a 24 byte nonce. To encrypt files though, we use a 20 byte nonce attached to a counter tracking bytes encrypted. This is because although XSalsa20 uses an internal 64 bit counter, it is derived from the nonce we pass it.As such we have to make the (24-byte) nonce unique for every call of XORKeyStream and to do that we use a counter.
-
+//
 // The ramifications of using a 20-byte nonce and a 4 byte counter are that the maximum file size we can encrypt at once is 4 GiB, and we now can "only" safely encrypt 2^80 passwords/files/etc before we have a 50% chance of a collision.
+package XSalsa20
+
 import (
 	"crypto/hmac"
 	"crypto/sha512"
