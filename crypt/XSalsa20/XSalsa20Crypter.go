@@ -160,6 +160,9 @@ func (c *XSalsa20Crypter) CalcKey(password, salt []byte) (err error) {
 	return nil
 }
 
+// EncryptFile encrypts inFile and writes to outFile
+// outFile will be truncated if it exists.
+// As we're encrypting, we also calculate an HMAC using the encrypted output. We write this HMAC to the start of the file
 func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 	in, err := os.Open(inFile)
 	if err != nil {
@@ -233,8 +236,11 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 
 		combinedNonce := slices.Combine(nonce, counterBytes)
 
+		// The order of these operations is very important.
+		// We MUST calculate the HMAC of the encrypted data, NOT the HMAC of the plaintext. NEVER do any other order.
 		salsa20.XORKeyStream(data, data, combinedNonce, &encKey)
 		mac.Write(data)
+
 		_, err = out.Write(data)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -246,6 +252,7 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 		}
 	}
 
+	// Write the MAC to the start of the file, in the placeholder we left
 	hash := mac.Sum(nil)
 	out.Seek(0, 0)
 	_, err = out.Write(hash)
@@ -261,6 +268,9 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 	return nil
 }
 
+// DecryptFile decrypts inFile and writes the result to outFile
+// outFile will be truncated if it already exists
+// Before we do any decription, we check the HMAC of the encrypted file. We refuse to decrypt if there's a problem.
 func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 	in, err := os.Open(inFile)
 	if err != nil {
@@ -303,6 +313,8 @@ func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 		return errors.Wrap(err, "Unable to decrypt file")
 	}
 
+	// We MUST check the integrity of the data before decrypting.
+	// Anything else is terrifying.
 	authKey := c.Key[32:]
 	mac := hmac.New(sha512.New, authKey)
 	mac.Write(nonce)
@@ -323,6 +335,8 @@ func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 		data = data[:n]
 		mac.Write(data)
 	}
+
+	// Time to compare the HMACs
 	expectedMac := mac.Sum(nil)
 	if !hmac.Equal(testMac, expectedMac) {
 		log.WithFields(log.Fields{
@@ -333,6 +347,7 @@ func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 		return errors.New("HMAC Mismatch")
 	}
 
+	// Now that we know the data hasn't been tampered with, we can actually start decrypting.
 	in.Seek((64 + 20), 0)
 
 	var counter uint32
