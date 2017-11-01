@@ -63,4 +63,4 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgements
-* [Viper](https://github.com/spf13/viper) for inspiring the JSON canister
+* [Viper](https://github.com/spf13/viper) for inspiring the JSON canister syntax
