@@ -24,7 +24,7 @@ type ChaCha20Crypter struct {
 func Create(key []byte) (*ChaCha20Crypter, error) {
 	var c ChaCha20Crypter
 	if key == nil {
-		err := c.GenKey()
+		_, err := c.GenKey()
 		if err != nil {
 			return nil, errors.Wrap(err, "Error initializing crypter")
 		}
@@ -93,16 +93,16 @@ func (c *ChaCha20Crypter) Decrypt(message []byte) ([]byte, error) {
 	return plainText, nil
 }
 
-func (c *ChaCha20Crypter) GenKey() (err error) {
+func (c *ChaCha20Crypter) GenKey() (key []byte, err error) {
 	c.Key, err = random.Bytes(chacha20poly1305.KeySize)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error":   err,
 			"crypter": "ChaCha20-Poly1305",
 		}).Debug("Error generating key")
-		return errors.Wrap(err, "Error generating key")
+		return nil, errors.Wrap(err, "Error generating key")
 	}
-	return nil
+	return c.Key, nil
 }
 
 func (c *ChaCha20Crypter) DeriveKey(password []byte) ([]byte, error) {

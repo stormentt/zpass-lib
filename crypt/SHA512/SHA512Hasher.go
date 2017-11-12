@@ -19,7 +19,7 @@ type Sha512Hasher struct {
 func Create(key []byte) (*Sha512Hasher, error) {
 	var h Sha512Hasher
 	if key == nil {
-		err := h.GenKey()
+		_, err := h.GenKey()
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +41,7 @@ func Create(key []byte) (*Sha512Hasher, error) {
 }
 
 // Digest returns the sha512-hmac of a given message using this hasher's key
-func (h Sha512Hasher) Digest(message []byte) []byte {
+func (h *Sha512Hasher) Digest(message []byte) []byte {
 	mac := hmac.New(sha512.New, h.Key)
 	mac.Write(message)
 	hmac := mac.Sum(nil)
@@ -49,20 +49,20 @@ func (h Sha512Hasher) Digest(message []byte) []byte {
 }
 
 // Verify a message against an HMAC
-func (h Sha512Hasher) Verify(message, testMac []byte) bool {
+func (h *Sha512Hasher) Verify(message, testMac []byte) bool {
 	expectedMAC := h.Digest(message)
 	return hmac.Equal(testMac, expectedMAC)
 }
 
 // GenKey generates a key of appropriate length for the hasher
-func (h Sha512Hasher) GenKey() (err error) {
+func (h *Sha512Hasher) GenKey() (key []byte, err error) {
 	h.Key, err = random.Bytes(sha512.Size)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error":  err,
 			"hasher": "sha512-HMAC",
 		}).Debug("Error generating key")
-		return errors.Wrap(err, "Error generating key")
+		return nil, errors.Wrap(err, "Error generating key")
 	}
-	return nil
+	return h.Key, nil
 }

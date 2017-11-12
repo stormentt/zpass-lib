@@ -4,7 +4,7 @@ package crypt
 type Crypter interface {
 	Encrypt(plaintext []byte) ([]byte, error)
 	Decrypt(ciphertext []byte) ([]byte, error)
-	GenKey() (err error)
+	GenKey() ([]byte, error)
 	DeriveKey(password []byte) ([]byte, error)
-	CalcKey(password, salt []byte) (err error)
+	CalcKey(password, salt []byte) error
 }

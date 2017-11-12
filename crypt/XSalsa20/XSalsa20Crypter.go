@@ -1,8 +1,6 @@
 // Package XSalsa20 provides a crypter for encrypting/decrypting data with XSalsa20.
 // We use SHA512-HMAC with a seperate key to provide messenge integrity
-// XSalsa20 uses a 24 byte nonce. To encrypt files though, we use a 20 byte nonce attached to a counter tracking bytes encrypted. This is because although XSalsa20 uses an internal 64 bit counter, it is derived from the nonce we pass it.As such we have to make the (24-byte) nonce unique for every call of XORKeyStream and to do that we use a counter.
-//
-// The ramifications of using a 20-byte nonce and a 4 byte counter are that the maximum file size we can encrypt at once is 4 GiB, and we now can "only" safely encrypt 2^80 passwords/files/etc before we have a 50% chance of a collision.
+// XSalsa20 uses a 24 byte nonce. To encrypt files though, we use a 20 byte nonce attached to a counter tracking chunks encrypted. This is because although XSalsa20 uses an internal 64 bit counter, it is derived from the nonce we pass it.As such we have to make the (24-byte) nonce unique for every call of XORKeyStream and to do that we use a counter.
 package XSalsa20
 
 import (
@@ -22,8 +20,8 @@ import (
 )
 
 const (
-	KeySize       = 64         //Minimum of 512 bits, 256 for encryption & 256 for MAC
-	FileChunkSize = 128 * 1024 // 128 KiB
+	KeySize       = 64 //Minimum of 512 bits, 256 for encryption & 256 for MAC
+	FileChunkSize = 128 * 1024
 )
 
 type XSalsa20Crypter struct {
@@ -65,7 +63,7 @@ func (c *XSalsa20Crypter) Encrypt(message []byte) ([]byte, error) {
 	}
 
 	cipherText := make([]byte, len(message))
-	salsa20.XORKeyStream(cipherText[:], message[:], nonce, &encKey)
+	salsa20.XORKeyStream(cipherText, message, nonce, &encKey)
 
 	nonceAndCipher := slices.Combine(nonce, cipherText)
 
@@ -109,21 +107,21 @@ func (c *XSalsa20Crypter) Decrypt(message []byte) ([]byte, error) {
 
 	plaintext := make([]byte, len(cipherText))
 
-	salsa20.XORKeyStream(plaintext[:], cipherText[:], nonce, &encKey)
+	salsa20.XORKeyStream(plaintext, cipherText, nonce, &encKey)
 
 	return plaintext, nil
 }
 
-func (c *XSalsa20Crypter) GenKey() (err error) {
+func (c *XSalsa20Crypter) GenKey() (key []byte, err error) {
 	c.Key, err = random.Bytes(KeySize)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error":   err,
 			"crypter": "XSalsa20",
 		}).Debug("Error generating key")
-		return errors.Wrap(err, "Error generating key")
+		return nil, errors.Wrap(err, "Error generating key")
 	}
-	return nil
+	return c.Key, nil
 }
 
 func (c *XSalsa20Crypter) DeriveKey(password []byte) ([]byte, error) {
@@ -186,7 +184,6 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 	}
 	defer out.Close()
 
-	// I'm giving 4 bytes to be used as a counter because that gives us 160 bits for random data & 32 bits for file size. 32 bits of file size gives us a maximum safe encryption limit of 4GiB.
 	nonce, err := random.Bytes(20)
 	var counter uint32
 	counterBytes := make([]byte, 4)
@@ -221,7 +218,7 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 
 	data := make([]byte, FileChunkSize)
 	for {
-		n, err := in.Read(data)
+		n, err := in.Read(data[:cap(data)])
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -232,7 +229,7 @@ func (c *XSalsa20Crypter) EncryptFile(inFile, outFile string) (err error) {
 			}).Debug("Error while reading file")
 			return err
 		}
-		counter += uint32(n)
+		counter += 1
 		binary.LittleEndian.PutUint32(counterBytes, counter)
 		data = data[:n]
 
@@ -322,7 +319,7 @@ func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 	mac.Write(nonce)
 	data := make([]byte, FileChunkSize)
 	for {
-		n, err := in.Read(data)
+		n, err := in.Read(data[:cap(data)])
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -359,7 +356,7 @@ func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 	copy(encKey[:], c.Key[:32])
 
 	for {
-		n, err := in.Read(data)
+		n, err := in.Read(data[:cap(data)])
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -370,7 +367,7 @@ func (c *XSalsa20Crypter) DecryptFile(inFile, outFile string) (err error) {
 			}).Debug("Error while reading file")
 			return err
 		}
-		counter += uint32(n)
+		counter += 1
 		binary.LittleEndian.PutUint32(counterBytes, counter)
 		data = data[:n]
 

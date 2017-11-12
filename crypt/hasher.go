@@ -4,5 +4,5 @@ package crypt
 type Hasher interface {
 	Digest(message []byte) []byte
 	Verify(message, testMAC []byte) bool
-	GenKey() (err error)
+	GenKey() (key []byte, err error)
 }

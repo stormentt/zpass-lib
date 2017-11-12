@@ -18,7 +18,7 @@ func BenchmarkKDF(b *testing.B) {
 func TestEncryption(t *testing.T) {
 	plaintext := []byte("Hello World! This is a test!")
 	var c crypt.ChaCha20Crypter
-	err := c.GenKey()
+	_, err := c.GenKey()
 	if err != nil {
 		t.Errorf("Encrypt() failed: %v", err)
 	}
