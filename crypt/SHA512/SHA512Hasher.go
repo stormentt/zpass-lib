@@ -3,10 +3,16 @@ package SHA512
 import (
 	"crypto/hmac"
 	"crypto/sha512"
+	"io"
+	"os"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/stormentt/zpass-lib/random"
+)
+
+const (
+	FileChunkSize = 128 * 1024
 )
 
 type Sha512Hasher struct {
@@ -48,10 +54,57 @@ func (h *Sha512Hasher) Digest(message []byte) []byte {
 	return hmac
 }
 
+func (h *Sha512Hasher) DigestFile(path string) ([]byte, error) {
+	in, err := os.Open(path)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+			"path":  path,
+		}).Debug("Unable to digest file")
+		return nil, errors.Wrap(err, "Unable to digest file")
+	}
+	defer in.Close()
+
+	data := make([]byte, FileChunkSize)
+	mac := hmac.New(sha512.New, h.Key)
+	for {
+		n, err := in.Read(data[:cap(data)])
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			log.WithFields(log.Fields{
+				"error": err,
+				"path":  path,
+			}).Debug("Error digesting file")
+			return nil, errors.Wrap(err, "Error digesting file")
+		}
+
+		data = data[:n]
+		mac.Write(data)
+	}
+
+	result := mac.Sum(nil)
+	return result, nil
+}
+
+func (h *Sha512Hasher) VerifyFile(path string, testMAC []byte) bool {
+	expectedMAC, err := h.DigestFile(path)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+			"path":  path,
+		}).Debug("Error verifying file")
+		return false
+	}
+
+	return hmac.Equal(testMAC, expectedMAC)
+}
+
 // Verify a message against an HMAC
-func (h *Sha512Hasher) Verify(message, testMac []byte) bool {
+func (h *Sha512Hasher) Verify(message, testMAC []byte) bool {
 	expectedMAC := h.Digest(message)
-	return hmac.Equal(testMac, expectedMAC)
+	return hmac.Equal(testMAC, expectedMAC)
 }
 
 // GenKey generates a key of appropriate length for the hasher
