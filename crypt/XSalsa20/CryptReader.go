@@ -34,7 +34,6 @@ func NewCryptReader(backing io.ReadSeeker, key []byte) *CryptReader {
 }
 
 func (c *CryptReader) initializeSalsa() {
-	fmt.Printf("CryptReader: nonce: %X\n", c.nonce)
 	// oh boy oh man, i'm gonna fuck this up
 	var encKey [32]byte
 	copy(encKey[:], c.key[:32])
@@ -49,9 +48,6 @@ func (c *CryptReader) initializeSalsa() {
 	salsa.HSalsa20(&subKey, &hNonce, &encKey, &salsa.Sigma)
 	copy(c.salsaKey[:], subKey[:])
 	copy(c.salsaNonce[:], subNonce[:8])
-
-	fmt.Printf("CryptReader: salsaKey: %X\n", c.salsaKey)
-	fmt.Printf("CryptReader: salsaNonce: %X\n", c.salsaKey)
 }
 
 func (c *CryptReader) Initialize() error {
@@ -146,13 +142,13 @@ func (c *CryptReader) Read(d []byte) (int, error) {
 	}
 
 	var positionBytes [8]byte
-	binary.LittleEndian.PutUint64(positionBytes[:], c.position)
+	binary.LittleEndian.PutUint64(positionBytes[:], c.position/64)
 
 	var nonceBytes [16]byte
 	copy(nonceBytes[:], c.salsaNonce[:])
 	copy(nonceBytes[8:], positionBytes[:])
 
-	salsa.XORKeyStream(tmp, tmp, &nonceBytes, &c.salsaKey)
+	XORKeyStream(tmp, tmp, &nonceBytes, &c.salsaKey)
 
 	c.position += uint64(n)
 

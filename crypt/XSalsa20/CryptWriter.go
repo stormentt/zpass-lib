@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
-	"fmt"
 	"hash"
 	"io"
 
@@ -55,8 +54,6 @@ func (c *CryptWriter) initializeSalsa() {
 	salsa.HSalsa20(&subKey, &hNonce, &encKey, &salsa.Sigma)
 	copy(c.salsaKey[:], subKey[:])
 	copy(c.salsaNonce[:], subNonce[:8])
-	fmt.Println("salsaKey: %X", c.salsaKey)
-	fmt.Println("salsaNonce: %X", c.salsaKey)
 }
 
 func (w *CryptWriter) Write(p []byte) (int, error) {
@@ -64,13 +61,13 @@ func (w *CryptWriter) Write(p []byte) (int, error) {
 	copy(tmp, p)
 
 	var positionBytes [8]byte
-	binary.LittleEndian.PutUint64(positionBytes[:], w.position)
+	binary.LittleEndian.PutUint64(positionBytes[:], w.position/64)
 
 	var nonceBytes [16]byte
 	copy(nonceBytes[:], w.salsaNonce[:])
 	copy(nonceBytes[8:], positionBytes[:])
 
-	salsa.XORKeyStream(tmp, tmp, &nonceBytes, &w.salsaKey)
+	XORKeyStream(tmp, tmp, &nonceBytes, &w.salsaKey)
 	n, err := w.backing.Write(tmp)
 	w.mac.Write(tmp)
 	w.position += uint64(n)
