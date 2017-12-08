@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stormentt/zpass-lib/crypt/ChaCha20Poly1305"
 	"github.com/stormentt/zpass-lib/crypt/SHA512"
+	"github.com/stormentt/zpass-lib/crypt/XSalsa20"
 )
 
 var (
@@ -35,6 +36,8 @@ func NewCrypter(private, public []byte) (Crypter, error) {
 	switch ConfigCrypter {
 	case "chacha20poly1305":
 		return ChaCha20Poly1305.Create(private)
+	case "xsalsa20":
+		return XSalsa20.Create(private)
 	default:
 		log.WithFields(log.Fields{
 			"error":   "Invalid crypter",
