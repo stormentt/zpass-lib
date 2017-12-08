@@ -31,7 +31,7 @@ type XSalsa20Crypter struct {
 func Create(key []byte) (*XSalsa20Crypter, error) {
 	var c XSalsa20Crypter
 	if key == nil {
-		err := c.GenKey()
+		_, err := c.GenKey()
 		if err != nil {
 			return nil, errors.Wrap(err, "Error initializing crypter")
 		}
@@ -125,7 +125,7 @@ func (c *XSalsa20Crypter) GenKey() (key []byte, err error) {
 }
 
 func (c *XSalsa20Crypter) DeriveKey(password []byte) ([]byte, error) {
-	salt, err := random.Bytes(32)
+	salt, err := random.Bytes(12)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to derive key")
 	}
