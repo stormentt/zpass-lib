@@ -50,6 +50,12 @@ func (c *CryptReader) initializeSalsa() {
 	copy(c.salsaNonce[:], subNonce[:8])
 }
 
+func (c *CryptReader) Seek(offset int64, whence int) (int64, error) {
+	pos, err := c.backing.Seek(offset, whence)
+	c.position = uint64(pos)
+	return pos, err
+}
+
 func (c *CryptReader) Initialize() error {
 	_, err := c.backing.Seek(0, 0)
 	if err != nil {
@@ -78,7 +84,6 @@ func (c *CryptReader) Initialize() error {
 
 	nonce := make([]byte, 24)
 	n, err = c.backing.Read(nonce)
-	fmt.Println("CryptReader Init: Read ", n, "bytes for nonce")
 	if n != 24 {
 		log.WithFields(log.Fields{
 			"n":   n,
@@ -91,7 +96,6 @@ func (c *CryptReader) Initialize() error {
 		}
 	}
 	copy(c.nonce, nonce)
-	fmt.Printf("c.nonce: %X\n", c.nonce)
 
 	mac := hmac.New(sha512.New, authKey)
 	mac.Write(nonce)
@@ -142,13 +146,14 @@ func (c *CryptReader) Read(d []byte) (int, error) {
 	}
 
 	var positionBytes [8]byte
-	binary.LittleEndian.PutUint64(positionBytes[:], c.position/64)
+	binary.LittleEndian.PutUint64(positionBytes[:], c.position)
 
 	var nonceBytes [16]byte
 	copy(nonceBytes[:], c.salsaNonce[:])
 	copy(nonceBytes[8:], positionBytes[:])
 
-	XORKeyStream(tmp, tmp, &nonceBytes, &c.salsaKey)
+	fmt.Printf("nonce: %X\n", nonceBytes)
+	salsa.XORKeyStream(tmp, tmp, &nonceBytes, &c.salsaKey)
 
 	c.position += uint64(n)
 

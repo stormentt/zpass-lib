@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
+	"fmt"
 	"hash"
 	"io"
 
@@ -61,13 +62,14 @@ func (w *CryptWriter) Write(p []byte) (int, error) {
 	copy(tmp, p)
 
 	var positionBytes [8]byte
-	binary.LittleEndian.PutUint64(positionBytes[:], w.position/64)
+	binary.LittleEndian.PutUint64(positionBytes[:], w.position)
 
 	var nonceBytes [16]byte
 	copy(nonceBytes[:], w.salsaNonce[:])
 	copy(nonceBytes[8:], positionBytes[:])
 
-	XORKeyStream(tmp, tmp, &nonceBytes, &w.salsaKey)
+	fmt.Printf("nonce: %X\n", nonceBytes)
+	salsa.XORKeyStream(tmp, tmp, &nonceBytes, &w.salsaKey)
 	n, err := w.backing.Write(tmp)
 	w.mac.Write(tmp)
 	w.position += uint64(n)
