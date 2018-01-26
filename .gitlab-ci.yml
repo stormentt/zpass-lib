@@ -7,7 +7,7 @@ before_script:
   - ln -s /builds /go/src/github.com
   - go get github.com/tools/godep
   - cd /go/src/github.com/${CI_PROJECT_PATH}
-  - ls /go/src/github.com/
+  - ln -s /go/src/github.com/${CI_PROJECT_PATH} /go/src/github.com/stormentt
 
 test:
   stage: test
