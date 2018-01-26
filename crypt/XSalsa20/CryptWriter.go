@@ -84,7 +84,7 @@ func (w *CryptWriter) Close() error {
 	return nil
 }
 
-func (w *CryptWriter) ReadFrom(r io.Reader) (int, error) {
+func (w *CryptWriter) ReadFrom(io.Reader) (int64, error) {
 	data := make([]byte, FileChunkSize)
 	total := 0
 	for {

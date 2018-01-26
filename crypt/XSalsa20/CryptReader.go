@@ -162,7 +162,7 @@ func (c *CryptReader) Read(d []byte) (int, error) {
 	return n, nil
 }
 
-func (r *CryptReader) WriteTo(w io.Writer) (int, error) {
+func (r *CryptReader) WriteTo(io.Writer) (int64, error) {
 	data := make([]byte, FileChunkSize)
 	total := 0
 	for {
