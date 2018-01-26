@@ -84,9 +84,9 @@ func (w *CryptWriter) Close() error {
 	return nil
 }
 
-func (w *CryptWriter) ReadFrom(io.Reader) (int64, error) {
+func (w *CryptWriter) ReadFrom(r io.Reader) (int64, error) {
 	data := make([]byte, FileChunkSize)
-	total := 0
+	total := int64(0)
 	for {
 		n, err := r.Read(data)
 		if err != nil {
@@ -99,7 +99,7 @@ func (w *CryptWriter) ReadFrom(io.Reader) (int64, error) {
 		if err != nil {
 			return total, err
 		}
-		total += written
+		total += int64(written)
 	}
 	return total, nil
 }
