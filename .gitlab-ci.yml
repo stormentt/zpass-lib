@@ -4,6 +4,7 @@ stages:
   - test
 
 before_script:
+  - apk add --update git
   - go get github.com/tools/godep
   - ln -s /builds /go/src/gitlab.com
   - cd /go/src/gitlab.com/${CI_PROJECT_PATH}
