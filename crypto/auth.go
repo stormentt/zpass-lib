@@ -7,10 +7,6 @@ import (
 	"golang.org/x/crypto/ed25519"
 )
 
-const (
-	ChunkSize = 128 * 1024
-)
-
 type AuthPair struct {
 	private ed25519.PrivateKey
 	public  ed25519.PublicKey

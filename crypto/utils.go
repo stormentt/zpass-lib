@@ -8,6 +8,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	ChunkSize = 128 * 1024
+)
+
 func HashFile(path string, hasher hash.Hash) ([]byte, error) {
 	file, err := os.Open(path)
 	if err != nil {
