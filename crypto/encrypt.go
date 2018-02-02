@@ -7,10 +7,13 @@ import (
 	"golang.org/x/crypto/salsa20"
 )
 
+const EncryptionKeyLength = 32
+const EncryptionNonceLength = 24
+
 type EncryptionKey []byte
 
 func NewEncryptionKey() (EncryptionKey, error) {
-	key, err := random.Bytes(32)
+	key, err := random.Bytes(EncryptionKeyLength)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +22,7 @@ func NewEncryptionKey() (EncryptionKey, error) {
 }
 
 func (key EncryptionKey) Encrypt(msg []byte) ([]byte, error) {
-	if len(key) != 32 {
+	if len(key) != EncryptionKeyLength {
 		return nil, errors.New("EncryptionKey: invalid key size, must be 32")
 	}
 
@@ -30,7 +33,7 @@ func (key EncryptionKey) Encrypt(msg []byte) ([]byte, error) {
 
 	ciphertext := make([]byte, len(msg))
 
-	var encKey [32]byte
+	var encKey [EncryptionKeyLength]byte
 	copy(encKey[:], []byte(key))
 	salsa20.XORKeyStream(ciphertext, msg, nonce, &encKey)
 
@@ -40,8 +43,8 @@ func (key EncryptionKey) Encrypt(msg []byte) ([]byte, error) {
 }
 
 func (key EncryptionKey) Decrypt(msg []byte) ([]byte, error) {
-	if len(key) != 32 {
-		return nil, errors.New("EncryptionKey: invalid key size, must be 32")
+	if len(key) != EncryptionKeyLength {
+		return nil, errors.New("EncryptionKey: invalid key size, must be EncryptionKeyLength")
 	}
 
 	if len(msg) <= 24 {
@@ -51,9 +54,9 @@ func (key EncryptionKey) Decrypt(msg []byte) ([]byte, error) {
 	nonce := msg[:24]
 	ciphertext := msg[24:]
 
-	plaintext := make([]byte, len(ciphertext))
+	plaintext := make([]byte, len(ciphertext)-EncryptionNonceLength)
 
-	var encKey [32]byte
+	var encKey [EncryptionKeyLength]byte
 	copy(encKey[:], []byte(key))
 	salsa20.XORKeyStream(plaintext, ciphertext, nonce, &encKey)
 

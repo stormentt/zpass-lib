@@ -2,20 +2,27 @@ package crypto
 
 import (
 	"crypto/hmac"
+	"hash"
 
 	"github.com/stormentt/zpass-lib/random"
 	"golang.org/x/crypto/blake2b"
 )
 
+const IntegrityKeyLength = 64
+
 type IntegrityKey []byte
 
 func NewIntegrityKey() (IntegrityKey, error) {
-	key, err := random.Bytes(64)
+	key, err := random.Bytes(IntegrityKeyLength)
 	if err != nil {
 		return nil, err
 	}
 
 	return IntegrityKey(key), nil
+}
+
+func (key IntegrityKey) NewHash() (hash.Hash, error) {
+	return blake2b.New512(key)
 }
 
 func (key IntegrityKey) Sign(msg []byte) ([]byte, error) {
