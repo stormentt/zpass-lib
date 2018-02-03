@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stormentt/zpass-lib/random"
+	"golang.org/x/crypto/salsa20/salsa"
 )
 
 type SalsaWriter struct {
@@ -20,8 +21,6 @@ type SalsaWriter struct {
 
 	sKey   [32]byte
 	sNonce SalsaNonce
-
-	blockCounter int
 }
 
 func NewSalsaWriter(encKey EncryptionKey, intKey IntegrityKey, backing io.WriteSeeker) (*SalsaWriter, error) {
@@ -39,7 +38,7 @@ func NewSalsaWriter(encKey EncryptionKey, intKey IntegrityKey, backing io.WriteS
 		return nil, err
 	}
 
-	nonce, err := random.Bytes(EncryptionNonceSize)
+	nonce, err := random.Bytes(EncryptionNonceLength)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +49,7 @@ func NewSalsaWriter(encKey EncryptionKey, intKey IntegrityKey, backing io.WriteS
 	}
 	hash.Write(nonce)
 
-	_, err := backing.Write(nonce)
+	_, err = backing.Write(nonce)
 	if err != nil {
 		return nil, err
 	}
@@ -66,9 +65,29 @@ func NewSalsaWriter(encKey EncryptionKey, intKey IntegrityKey, backing io.WriteS
 		sNonce:  sNonce,
 		hash:    hash,
 	}
-	sw.buffer = sw.bufferBacking
+	sw.buffer = bytes.NewBuffer(sw.bufferBytes)
 
-	return &sw
+	return &sw, nil
+}
+
+func (sw *SalsaWriter) encryptBuffer() {
+	buffBytes := sw.buffer.Bytes()
+
+	salsa.XORKeyStream(buffBytes, buffBytes, sw.sNonce.Bytes(), &sw.sKey)
+	sw.hash.Write(buffBytes)
+	sw.sNonce.Incr(len(buffBytes) / 64)
+}
+
+func (sw *SalsaWriter) flushBuffer() (int64, error) {
+	return io.Copy(sw.backing, sw.buffer)
+}
+
+func (sw *SalsaWriter) passEncrypted(p []byte) (int, error) {
+	tmp := make([]byte, len(p))
+	salsa.XORKeyStream(tmp, p, sw.sNonce.Bytes(), &sw.sKey)
+	sw.hash.Write(tmp)
+	sw.sNonce.Incr(len(tmp) / 64)
+	return sw.backing.Write(tmp)
 }
 
 func (sw *SalsaWriter) Write(p []byte) (int, error) {
@@ -89,12 +108,14 @@ func (sw *SalsaWriter) Write(p []byte) (int, error) {
 			bLen = sw.buffer.Len()
 		}
 
-		sw.hash.Write(sw.bufferBytes[:bLen])
-		n, err := io.Copy(sw.backing, sw.buffer)
+		sw.encryptBuffer()
+
+		n, err := sw.flushBuffer()
 		total += int(n)
 		if err != nil {
 			return total, errors.WithStack(err)
 		}
+
 	}
 
 	if pLen > 0 {
@@ -102,21 +123,17 @@ func (sw *SalsaWriter) Write(p []byte) (int, error) {
 		pRemainder := pLen - (pBlocks * 64)
 		pFullLen := pLen - pRemainder
 
-		sw.hash.Write(p[:pFullLen])
-		n, err := sw.backing.Write(p[:pFullLen])
+		n, err := sw.passEncrypted(p[:pFullLen])
 		total += int(n)
 		if err != nil {
 			return total, errors.WithStack(err)
 		}
 
 		if pRemainder > 0 {
-			n, _ := sw.buffer.Write(p[pFullLen:])
+			sw.buffer.Write(p[pFullLen:])
 		}
 	}
 
-	totalBlocks := total / 64
-	sw.sNonce.Incr(totalBlocks)
-	sw.blockCounter += totalBlocks
 	return total, nil
 }
 
@@ -125,13 +142,13 @@ func (sw *SalsaWriter) Close() error {
 		return errors.New("salsawriter already Closed")
 	}
 
-	sw.hash.Write(sw.bufferBytes[:sw.buffer.Len])
-	n, err := io.Copy(sw.backing, sw.buffer)
+	sw.encryptBuffer()
+	_, err := sw.flushBuffer()
 	if err != nil {
 		return err
 	}
 
-	_, err := sw.backing.Seek(0, 0)
+	_, err = sw.backing.Seek(0, 0)
 	if err != nil {
 		return err
 	}

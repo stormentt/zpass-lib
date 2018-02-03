@@ -15,6 +15,25 @@ func (n *SalsaNonce) Incr(count int) {
 	binary.LittleEndian.PutUint64(n[8:], counter)
 }
 
+func (n *SalsaNonce) Decr(count int) {
+	counter := binary.LittleEndian.Uint64(n[8:])
+	counter -= uint64(count)
+	binary.LittleEndian.PutUint64(n[8:], counter)
+}
+
+func (n *SalsaNonce) Set(count uint64) {
+	binary.LittleEndian.PutUint64(n[8:], count)
+}
+
+func (n *SalsaNonce) Bytes() *[16]byte {
+	return (*[16]byte)(n)
+}
+
+func (n *SalsaNonce) Counter() uint64 {
+	u := binary.LittleEndian.Uint64(n[8:])
+	return u
+}
+
 func salsaSubs(key []byte, nonce []byte, blockCount uint64) ([32]byte, SalsaNonce, error) {
 
 	if len(key) != 32 {

@@ -36,3 +36,20 @@ func HashFile(path string, hasher hash.Hash) ([]byte, error) {
 	result := hasher.Sum(nil)
 	return result, nil
 }
+
+func HashReader(r io.Reader, hasher hash.Hash) ([]byte, error) {
+	data := make([]byte, ChunkSize)
+	for {
+		n, err := r.Read(data[:cap(data)])
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		data = data[:n]
+		hasher.Write(data)
+	}
+
+	return hasher.Sum(nil), nil
+}
