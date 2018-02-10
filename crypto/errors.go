@@ -23,7 +23,7 @@ type CryptoProviderBadSizeError struct {
 }
 
 func (e CryptoProviderBadSizeError) Error() string {
-	return fmt.Sprintf("CryptoProvider keys must be %d bytes, provided key was %d bytes.", EncKeySize+IntKeySize+AuthPairSize, e.size)
+	return fmt.Sprintf("CryptoProvider keys must be %d bytes, provided key was %d bytes.", EncKeySize+IntKeySize+AuthFullSize, e.size)
 }
 
 type EncNonceBadSizeError struct {
