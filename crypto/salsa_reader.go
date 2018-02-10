@@ -8,8 +8,11 @@ import (
 	"golang.org/x/crypto/salsa20/salsa"
 )
 
+// SalsaReader decrypts an io.ReadSeeker
 type SalsaReader struct {
-	backing   io.ReadSeeker
+	backing io.ReadSeeker
+
+	// Integrous is true if the reader's MAC was valid, false otherwise
 	Integrous bool
 
 	sKey   [EncKeySize]byte
@@ -18,6 +21,9 @@ type SalsaReader struct {
 	position uint64
 }
 
+// NewSalsaReader creates a new SalsaReader which will read from backing
+//
+// This function validates the backing's MAC and will block until the validation is finished. If the validation fails, it will return an error and block the SalsaReader from reading.
 func NewSalsaReader(encKey EncryptionKey, intKey IntegrityKey, backing io.ReadSeeker) (*SalsaReader, error) {
 	if len(encKey) != EncKeySize {
 		return nil, EncKeyBadSizeError{len(encKey)}
@@ -73,6 +79,9 @@ func NewSalsaReader(encKey EncryptionKey, intKey IntegrityKey, backing io.ReadSe
 	return &sr, nil
 }
 
+// Read decrypts and returns data
+//
+// If the SalsaReader's validation failed in NewSalsaReader, this will return an error
 func (sr *SalsaReader) Read(p []byte) (int, error) {
 	if !sr.Integrous {
 		return 0, UnintegrousReadError{}
@@ -102,6 +111,13 @@ func (sr *SalsaReader) Read(p []byte) (int, error) {
 	return n - int(positionOffset), nil
 }
 
+// Seek seeks to an offset in the DECRYPTED file. So seeking to position will put you at MsgOverhead in the backing stream, which is the start of the actual encrypted information.
+//
+// Diagram
+//	                     v Seek(0,0) will put you here
+// 	[MAC, Nonce, Etc ::: Actual Encrypted Data]
+// 	                  ^ MsgOverhead bytes
+// If the SalsaReader's validation failed in NewSalsaReader, this will return an error
 func (sr *SalsaReader) Seek(offset int64, whence int) (int64, error) {
 	if !sr.Integrous {
 		return 0, UnintegrousReadError{}
@@ -145,6 +161,9 @@ func (sr *SalsaReader) Seek(offset int64, whence int) (int64, error) {
 	return 0, errors.New("seek: invalid whence value")
 }
 
+// WriteTo decrypts the entire backing reader and writes the decrypted contents to the given writer
+//
+// WriteTo reads from the backing reader in FileChunkSize byte blocks
 func (sr *SalsaReader) WriteTo(w io.Writer) (int64, error) {
 	if !sr.Integrous {
 		return 0, UnintegrousReadError{}

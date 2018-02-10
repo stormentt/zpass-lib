@@ -8,6 +8,7 @@ import (
 	"github.com/stormentt/zpass-lib/util/slices"
 )
 
+// CryptoProvider provides encryption, integrity, and authentication using symmetric keys for encryption and public/private keys for authentication.
 type CryptoProvider struct {
 	encryptionKey EncryptionKey
 	integrityKey  IntegrityKey
@@ -15,6 +16,7 @@ type CryptoProvider struct {
 	raw           []byte
 }
 
+// NewCryptoProvider generates a new CryptoProvider with random keys
 func NewCryptoProvider() (*CryptoProvider, error) {
 	var err error
 
@@ -40,35 +42,46 @@ func NewCryptoProvider() (*CryptoProvider, error) {
 	return &provider, nil
 }
 
+// CryptoProviderFromBytes creates a CryptoProvider from a byte slice
+//
+// b must be EncKeySize+IntKeySize+AuthFullSize in length
 func CryptoProviderFromBytes(b []byte) (*CryptoProvider, error) {
 	provider := new(CryptoProvider)
 	provider.raw = make([]byte, len(b))
-	copy(provider.raw, b[:])
+	copy(provider.raw, b)
 
-	if len(b) == EncKeySize+IntKeySize {
+	if len(b) == EncKeySize+IntKeySize+AuthFullSize {
 		provider.encryptionKey = provider.raw[:EncKeySize]
-		provider.integrityKey = provider.raw[EncKeySize:]
+		provider.integrityKey = provider.raw[EncKeySize:IntKeySize]
+		authPair, _ := AuthPairFromBytes(provider.raw[EncKeySize+IntKeySize:])
+		provider.authPair = authPair
 	} else {
-		return nil, errors.New("CryptoProvider: invalid []byte size")
+		return nil, CryptoProviderBadSizeError{len(b)}
 	}
 
 	return provider, nil
 }
 
+// Encrypt encrypts a byte slice & generates a MAC
+//
+// The MAC is prepended to the encrypted slice. This is to encourage MAC validation before decryption.
 func (c *CryptoProvider) Encrypt(msg []byte) ([]byte, error) {
 	ciphertext, err := c.encryptionKey.Encrypt(msg)
 	if err != nil {
 		return nil, err
 	}
 
-	sig, err := c.integrityKey.Sign(ciphertext)
+	mac, err := c.integrityKey.Sign(ciphertext)
 	if err != nil {
 		return nil, err
 	}
 
-	return slices.Combine(sig, ciphertext), nil
+	return slices.Combine(mac, ciphertext), nil
 }
 
+// Decrypt decrypts an encrypted byte slice
+//
+// If the message's MAC is invalid decryption will return a nil & an error
 func (c *CryptoProvider) Decrypt(msg []byte) ([]byte, error) {
 	if len(msg) < MsgOverhead {
 		return nil, MsgTooShortError{wanted: MsgOverhead, size: len(msg)}
@@ -88,6 +101,9 @@ func (c *CryptoProvider) Decrypt(msg []byte) ([]byte, error) {
 	return plaintext, err
 }
 
+// EncryptFile encrypts a file & generates a MAC
+//
+// The MAC is prepended to the encrypted file. This is to encourage MAC validation before decryption.
 func (c *CryptoProvider) EncryptFile(inPath, outPath string) error {
 	in, err := os.Open(inPath)
 	if err != nil {
@@ -123,6 +139,9 @@ func (c *CryptoProvider) EncryptFile(inPath, outPath string) error {
 	return nil
 }
 
+// DecryptFile decrypts a file
+//
+// If the file's MAC is invalid decryption will return an error
 func (c *CryptoProvider) DecryptFile(inPath, outPath string) error {
 	in, err := os.Open(inPath)
 	if err != nil {

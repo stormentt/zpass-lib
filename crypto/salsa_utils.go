@@ -6,40 +6,49 @@ import (
 	"golang.org/x/crypto/salsa20/salsa"
 )
 
+// SalsaNonce is a helper type for keeping track of an XSalsa20 nonce's counter
 type SalsaNonce [16]byte
 
+// Incr increments the SalsaNonce counter by count
 func (n *SalsaNonce) Incr(count int) {
 	counter := binary.LittleEndian.Uint64(n[8:])
 	counter += uint64(count)
 	binary.LittleEndian.PutUint64(n[8:], counter)
 }
 
+// Decr decrements the SalsaNonce counter by count
 func (n *SalsaNonce) Decr(count int) {
 	counter := binary.LittleEndian.Uint64(n[8:])
 	counter -= uint64(count)
 	binary.LittleEndian.PutUint64(n[8:], counter)
 }
 
+// Set sets the SalsaNonce counter to count
 func (n *SalsaNonce) Set(count uint64) {
 	binary.LittleEndian.PutUint64(n[8:], count)
 }
 
+// Bytes returns a pointer to the raw SalsaNonce bytes
+//
+// This function returns a pointer because salsa.XORKeyStream takes a pointer
 func (n *SalsaNonce) Bytes() *[16]byte {
 	return (*[16]byte)(n)
 }
 
+// Counter returns the uint64 representation of the SalsaNonce's counter
 func (n *SalsaNonce) Counter() uint64 {
 	u := binary.LittleEndian.Uint64(n[8:])
 	return u
 }
 
+// salsaSubs calculates the subkey & subnonce for a key & nonce pair
 func salsaSubs(key []byte, nonce []byte, blockCount uint64) ([EncKeySize]byte, SalsaNonce, error) {
 
 	if len(key) != EncKeySize {
 		return [EncKeySize]byte{}, SalsaNonce{}, EncKeyBadSizeError{len(key)}
 	}
 
-	if len(nonce) != 24 {
+	if len(nonce) != EncNonceSize {
 		return [EncKeySize]byte{}, SalsaNonce{}, EncNonceBadSizeError{len(nonce)}
 	}
 

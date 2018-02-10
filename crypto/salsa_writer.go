@@ -10,9 +10,12 @@ import (
 	"golang.org/x/crypto/salsa20/salsa"
 )
 
+// SalsaWriter encrypts data and writes it to an io.WriteSeeker
 type SalsaWriter struct {
 	backing io.WriteSeeker
-	Closed  bool
+
+	// Closed is true if the stream is closed & the MAC has been written
+	Closed bool
 
 	bufferBytes []byte
 	buffer      *bytes.Buffer
@@ -23,6 +26,9 @@ type SalsaWriter struct {
 	sNonce SalsaNonce
 }
 
+// NewSalsaWriter creates a new SalsaWriter that will write to backing
+//
+// This function leaves a IntHashSize byte block at the start of the backing stream, to hold the position of the MAC once its been calculated.
 func NewSalsaWriter(encKey EncryptionKey, intKey IntegrityKey, backing io.WriteSeeker) (*SalsaWriter, error) {
 	if len(encKey) != EncKeySize {
 		return nil, EncKeyBadSizeError{len(encKey)}
@@ -70,6 +76,7 @@ func NewSalsaWriter(encKey EncryptionKey, intKey IntegrityKey, backing io.WriteS
 	return &sw, nil
 }
 
+// encryptBuffer encrypts the SalsaWriter's internal buffer
 func (sw *SalsaWriter) encryptBuffer() {
 	buffBytes := sw.buffer.Bytes()
 
@@ -78,10 +85,12 @@ func (sw *SalsaWriter) encryptBuffer() {
 	sw.sNonce.Incr(len(buffBytes) / EncBlockSize)
 }
 
+// flushBuffer writes the SalsaWriter's internal buffer to the backing
 func (sw *SalsaWriter) flushBuffer() (int64, error) {
 	return io.Copy(sw.backing, sw.buffer)
 }
 
+// passEncrypted encrypts a byte slice and writes it to the backing
 func (sw *SalsaWriter) passEncrypted(p []byte) (int, error) {
 	tmp := make([]byte, len(p))
 	salsa.XORKeyStream(tmp, p, sw.sNonce.Bytes(), &sw.sKey)
@@ -90,6 +99,9 @@ func (sw *SalsaWriter) passEncrypted(p []byte) (int, error) {
 	return sw.backing.Write(tmp)
 }
 
+// Write encrypts a byte slice and writes it to the backing
+//
+// XSalsa20 operates on 64 byte blocks, so to keep everything consistent we only write full 64 byte blocks. To manage this, we keep an internal buffer. When writing new data to the SalsaWriter we check the buffer size. If the buffer can be filled with bytes from p, we do that first, encrypt the buffer, and then flush the buffer. After that, we encrypt & write as many full blocks of p as we can, and store the leftovers in the internal buffer.
 func (sw *SalsaWriter) Write(p []byte) (int, error) {
 	if sw.Closed {
 		return 0, SalsaWriterClosedError{}
@@ -137,6 +149,7 @@ func (sw *SalsaWriter) Write(p []byte) (int, error) {
 	return total, nil
 }
 
+// Close encrypts the remainder of the internal buffer & flushes it to the backing, then calculates the MAC of the entire backing and writes it to the start, in the placeholder NewSalsaWriter left earlier.
 func (sw *SalsaWriter) Close() error {
 	if sw.Closed {
 		return SalsaWriterClosedError{}
@@ -159,6 +172,9 @@ func (sw *SalsaWriter) Close() error {
 	return nil
 }
 
+// ReadFrom encrypts the entirety of a reader and writes the encrypted contents to backing
+//
+// ReadFrom reads from the reader in FileChunkSize byte blocks
 func (sw *SalsaWriter) ReadFrom(r io.Reader) (int64, error) {
 	data := make([]byte, FileChunkSize)
 	total := int64(0)

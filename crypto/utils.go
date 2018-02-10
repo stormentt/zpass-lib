@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// HashFile uses the hasher to calculate a hash for a file
 func HashFile(path string, hasher hash.Hash) ([]byte, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -33,6 +34,7 @@ func HashFile(path string, hasher hash.Hash) ([]byte, error) {
 	return result, nil
 }
 
+// HashReader uses the hasher to calculate a hash for a reader
 func HashReader(r io.Reader, hasher hash.Hash) ([]byte, error) {
 	data := make([]byte, FileChunkSize)
 	for {

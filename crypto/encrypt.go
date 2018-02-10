@@ -6,8 +6,10 @@ import (
 	"golang.org/x/crypto/salsa20"
 )
 
+// EncryptionKey must be EncKeySize bytes long.
 type EncryptionKey []byte
 
+// NewEncryptionKey generates a new random encryption key
 func NewEncryptionKey() (EncryptionKey, error) {
 	key, err := random.Bytes(EncKeySize)
 	if err != nil {
@@ -17,12 +19,17 @@ func NewEncryptionKey() (EncryptionKey, error) {
 	return EncryptionKey(key), nil
 }
 
+// Encrypt encrypts a message
+//
+// Important! Encrypt does NOT calculate a MAC. If you want to use Encrypt, make sure to include a MAC or you're just asking for trouble.
+//
+// The returned byte slice is Nonce + Ciphertext
 func (key EncryptionKey) Encrypt(msg []byte) ([]byte, error) {
 	if len(key) != EncKeySize {
 		return nil, EncKeyBadSizeError{len(key)}
 	}
 
-	nonce, err := random.Bytes(24)
+	nonce, err := random.Bytes(EncNonceSize)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +45,9 @@ func (key EncryptionKey) Encrypt(msg []byte) ([]byte, error) {
 	return nonceAndCipher, nil
 }
 
+// Decrypt decrypts a message
+//
+// Important! Decrypt does NOT validate a MAC. If you want to use Decrypt, make sure to validate a MAC beforehand. Failure to do so will result in decapitation.
 func (key EncryptionKey) Decrypt(msg []byte) ([]byte, error) {
 	if len(key) != EncKeySize {
 		return nil, EncKeyBadSizeError{len(key)}

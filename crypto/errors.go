@@ -18,6 +18,14 @@ func (e EncKeyBadSizeError) Error() string {
 	return fmt.Sprintf("Encryption keys must be %d bytes, provided key was %d bytes.", EncKeySize, e.size)
 }
 
+type CryptoProviderBadSizeError struct {
+	size int
+}
+
+func (e CryptoProviderBadSizeError) Error() string {
+	return fmt.Sprintf("CryptoProvider keys must be %d bytes, provided key was %d bytes.", EncKeySize+IntKeySize+AuthPairSize, e.size)
+}
+
 type EncNonceBadSizeError struct {
 	size int
 }
