@@ -8,17 +8,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	ChunkSize = 128 * 1024
-)
-
 func HashFile(path string, hasher hash.Hash) ([]byte, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 
-	data := make([]byte, ChunkSize)
+	data := make([]byte, FileChunkSize)
 	for {
 		n, err := file.Read(data[:cap(data)])
 		if err != nil {
@@ -27,7 +23,7 @@ func HashFile(path string, hasher hash.Hash) ([]byte, error) {
 			if err == io.EOF {
 				break
 			}
-			return nil, errors.Wrap(err, "AuthPair: error signing file")
+			return nil, errors.WithStack(err)
 		}
 		data = data[:n]
 		_, _ = hasher.Write(data)
@@ -38,7 +34,7 @@ func HashFile(path string, hasher hash.Hash) ([]byte, error) {
 }
 
 func HashReader(r io.Reader, hasher hash.Hash) ([]byte, error) {
-	data := make([]byte, ChunkSize)
+	data := make([]byte, FileChunkSize)
 	for {
 		n, err := r.Read(data[:cap(data)])
 		if err != nil {

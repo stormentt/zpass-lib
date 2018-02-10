@@ -3,7 +3,6 @@ package crypto
 import (
 	"encoding/binary"
 
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/salsa20/salsa"
 )
 
@@ -34,17 +33,17 @@ func (n *SalsaNonce) Counter() uint64 {
 	return u
 }
 
-func salsaSubs(key []byte, nonce []byte, blockCount uint64) ([32]byte, SalsaNonce, error) {
+func salsaSubs(key []byte, nonce []byte, blockCount uint64) ([EncKeySize]byte, SalsaNonce, error) {
 
-	if len(key) != 32 {
-		return [32]byte{}, SalsaNonce{}, errors.New("invalid key length")
+	if len(key) != EncKeySize {
+		return [EncKeySize]byte{}, SalsaNonce{}, EncKeyBadSizeError{len(key)}
 	}
 
 	if len(nonce) != 24 {
-		return [32]byte{}, SalsaNonce{}, errors.New("invalid nonce length")
+		return [EncKeySize]byte{}, SalsaNonce{}, EncNonceBadSizeError{len(nonce)}
 	}
 
-	var fixedKey [32]byte
+	var fixedKey [EncKeySize]byte
 	copy(fixedKey[:], key)
 
 	var hNonce [16]byte
@@ -53,7 +52,7 @@ func salsaSubs(key []byte, nonce []byte, blockCount uint64) ([32]byte, SalsaNonc
 	var subNonce [16]byte
 	copy(subNonce[:], nonce[16:])
 
-	var subKey [32]byte
+	var subKey [EncKeySize]byte
 	salsa.HSalsa20(&subKey, &hNonce, &fixedKey, &salsa.Sigma)
 
 	binary.LittleEndian.PutUint64(subNonce[8:], blockCount)

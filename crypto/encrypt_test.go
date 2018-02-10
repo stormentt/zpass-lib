@@ -10,7 +10,7 @@ import (
 func TestNewEncryptionKey(t *testing.T) {
 	key, err := NewEncryptionKey()
 	assert.NoError(t, err)
-	assert.Len(t, key, 32)
+	assert.Len(t, key, EncKeySize)
 }
 
 func TestEncrypt(t *testing.T) {

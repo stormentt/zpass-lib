@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"crypto/hmac"
-	"fmt"
 	"io"
 
 	"github.com/pkg/errors"
@@ -13,33 +12,30 @@ type SalsaReader struct {
 	backing   io.ReadSeeker
 	Integrous bool
 
-	sKey   [32]byte
+	sKey   [EncKeySize]byte
 	sNonce SalsaNonce
 
 	position uint64
 }
 
 func NewSalsaReader(encKey EncryptionKey, intKey IntegrityKey, backing io.ReadSeeker) (*SalsaReader, error) {
-	if len(encKey) != EncryptionKeyLength {
-		return nil, errors.New("EncryptionKey: invalid key size, must be 32")
+	if len(encKey) != EncKeySize {
+		return nil, EncKeyBadSizeError{len(encKey)}
 	}
 
-	if len(intKey) != IntegrityKeyLength {
-		return nil, errors.New("IntegrityKey: invalid key size, must be 64")
+	if len(intKey) != IntKeySize {
+		return nil, IntKeyBadSizeError{len(intKey)}
 	}
 
-	hash, err := intKey.NewHash()
+	hash, _ := intKey.NewHash()
+
+	testHash := make([]byte, IntHashSize)
+	_, err := backing.Read(testHash)
 	if err != nil {
 		return nil, err
 	}
 
-	testHash := make([]byte, 64)
-	_, err = backing.Read(testHash)
-	if err != nil {
-		return nil, err
-	}
-
-	nonce := make([]byte, 24)
+	nonce := make([]byte, EncNonceSize)
 	_, err = backing.Read(nonce)
 	if err != nil {
 		return nil, err
@@ -53,10 +49,10 @@ func NewSalsaReader(encKey EncryptionKey, intKey IntegrityKey, backing io.ReadSe
 
 	match := hmac.Equal(testHash, calcHash)
 	if !match {
-		return nil, fmt.Errorf("mac mismatch \n  %x \n  %x\n====================", testHash, calcHash)
+		return nil, MACMismatchError{testMAC: testHash, calcMAC: calcHash}
 	}
 
-	_, err = backing.Seek(88, 0)
+	_, err = backing.Seek(MsgOverhead, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -79,10 +75,10 @@ func NewSalsaReader(encKey EncryptionKey, intKey IntegrityKey, backing io.ReadSe
 
 func (sr *SalsaReader) Read(p []byte) (int, error) {
 	if !sr.Integrous {
-		return 0, errors.New("mac mismatch")
+		return 0, UnintegrousReadError{}
 	}
 
-	positionOffset := sr.position % 64
+	positionOffset := sr.position % EncBlockSize
 	if positionOffset != 0 {
 		sr.Seek(-int64(positionOffset), io.SeekCurrent)
 	}
@@ -102,59 +98,59 @@ func (sr *SalsaReader) Read(p []byte) (int, error) {
 	copy(p, tmp[positionOffset:])
 
 	sr.position += uint64(n)
-	sr.sNonce.Set(sr.position / 64)
+	sr.sNonce.Set(sr.position / EncBlockSize)
 	return n - int(positionOffset), nil
 }
 
 func (sr *SalsaReader) Seek(offset int64, whence int) (int64, error) {
 	if !sr.Integrous {
-		return 0, errors.New("mac mismatch")
+		return 0, UnintegrousReadError{}
 	}
 
 	switch whence {
 	case io.SeekStart:
-		n, err := sr.backing.Seek(88+offset, whence)
+		n, err := sr.backing.Seek(MsgOverhead+offset, whence)
 		if err != nil {
 			return n, err
 		}
 
-		sr.position = uint64(n) - 88
-		sr.sNonce.Set((uint64(n) - 88) / 64)
+		sr.position = uint64(n) - MsgOverhead
+		sr.sNonce.Set((uint64(n) - MsgOverhead) / EncBlockSize)
 	case io.SeekCurrent:
 		n, err := sr.backing.Seek(offset, whence)
 		if err != nil {
 			return n, err
 		}
 
-		if n < 88 {
-			return 0, errors.New("sought before start of file")
+		if n < MsgOverhead {
+			return 0, SoughtBehindError{}
 		}
 
-		sr.position = uint64(n) - 88
-		sr.sNonce.Set((uint64(n) - 88) / 64)
+		sr.position = uint64(n) - MsgOverhead
+		sr.sNonce.Set((uint64(n) - MsgOverhead) / EncBlockSize)
 	case io.SeekEnd:
 		n, err := sr.backing.Seek(offset, whence)
 		if err != nil {
 			return n, err
 		}
 
-		if n < 88 {
-			return 0, errors.New("sought before start of file")
+		if n < MsgOverhead {
+			return 0, SoughtBehindError{}
 		}
 
-		sr.position = uint64(n) - 88
-		sr.sNonce.Set((uint64(n) - 88) / 64)
+		sr.position = uint64(n) - MsgOverhead
+		sr.sNonce.Set((uint64(n) - MsgOverhead) / EncBlockSize)
 	}
 
-	return 0, errors.New("invalid whence value")
+	return 0, errors.New("seek: invalid whence value")
 }
 
 func (sr *SalsaReader) WriteTo(w io.Writer) (int64, error) {
 	if !sr.Integrous {
-		return 0, errors.New("mac mismatch")
+		return 0, UnintegrousReadError{}
 	}
 
-	data := make([]byte, ChunkSize)
+	data := make([]byte, FileChunkSize)
 	total := int64(0)
 	for {
 		n, err := sr.Read(data[:cap(data)])

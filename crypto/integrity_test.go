@@ -12,7 +12,7 @@ func TestNewIntegrityKey(t *testing.T) {
 	key, err := NewIntegrityKey()
 	assert.NoError(t, err)
 
-	assert.Len(t, key, 64)
+	assert.Len(t, key, IntKeySize)
 }
 
 func TestIntegSignatures(t *testing.T) {

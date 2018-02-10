@@ -31,13 +31,13 @@ func AuthPairFromBytes(b []byte) (AuthPair, error) {
 	pair.raw = make([]byte, len(b))
 	copy(pair.raw, b[:])
 
-	if len(b) == ed25519.PrivateKeySize {
+	if len(b) == AuthFullSize {
 		pair.private = ed25519.PrivateKey(pair.raw)
-		pair.public = ed25519.PublicKey(pair.raw[32:])
-	} else if len(b) == ed25519.PublicKeySize {
+		pair.public = ed25519.PublicKey(pair.raw[AuthHalfSize:])
+	} else if len(b) == AuthHalfSize {
 		pair.public = ed25519.PublicKey(pair.raw)
 	} else {
-		return AuthPair{}, errors.New("AuthPair: invalid []byte size")
+		return AuthPair{}, AuthPairBadSizeError{len(b)}
 	}
 
 	return pair, nil
@@ -53,7 +53,7 @@ func (pair AuthPair) Bytes() []byte {
 
 func (pair AuthPair) Sign(msg []byte) ([]byte, error) {
 	if pair.private == nil {
-		return nil, errors.New("AuthPair: can't sign, no private key")
+		return nil, NoPrivKeyError{}
 	}
 	return ed25519.Sign(pair.private, msg), nil
 }
@@ -64,7 +64,7 @@ func (pair AuthPair) Verify(msg, testSig []byte) bool {
 
 func (pair AuthPair) SignFile(path string) ([]byte, error) {
 	if pair.private == nil {
-		return nil, errors.New("AuthPair: can't sign file, no private key")
+		return nil, NoPrivKeyError{}
 	}
 
 	blake, _ := blake2b.New512(nil)

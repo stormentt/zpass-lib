@@ -19,26 +19,26 @@ type SalsaWriter struct {
 
 	hash hash.Hash
 
-	sKey   [32]byte
+	sKey   [EncKeySize]byte
 	sNonce SalsaNonce
 }
 
 func NewSalsaWriter(encKey EncryptionKey, intKey IntegrityKey, backing io.WriteSeeker) (*SalsaWriter, error) {
-	if len(encKey) != EncryptionKeyLength {
-		return nil, errors.New("EncryptionKey: invalid key size, must be 32")
+	if len(encKey) != EncKeySize {
+		return nil, EncKeyBadSizeError{len(encKey)}
 	}
 
-	if len(intKey) != IntegrityKeyLength {
-		return nil, errors.New("IntegrityKey: invalid key size, must be 64")
+	if len(intKey) != IntKeySize {
+		return nil, IntKeyBadSizeError{len(encKey)}
 	}
 
-	blank := make([]byte, 64)
+	blank := make([]byte, IntHashSize)
 	_, err := backing.Write(blank)
 	if err != nil {
 		return nil, err
 	}
 
-	nonce, err := random.Bytes(EncryptionNonceLength)
+	nonce, err := random.Bytes(EncNonceSize)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (sw *SalsaWriter) encryptBuffer() {
 
 	salsa.XORKeyStream(buffBytes, buffBytes, sw.sNonce.Bytes(), &sw.sKey)
 	sw.hash.Write(buffBytes)
-	sw.sNonce.Incr(len(buffBytes) / 64)
+	sw.sNonce.Incr(len(buffBytes) / EncBlockSize)
 }
 
 func (sw *SalsaWriter) flushBuffer() (int64, error) {
@@ -86,13 +86,13 @@ func (sw *SalsaWriter) passEncrypted(p []byte) (int, error) {
 	tmp := make([]byte, len(p))
 	salsa.XORKeyStream(tmp, p, sw.sNonce.Bytes(), &sw.sKey)
 	sw.hash.Write(tmp)
-	sw.sNonce.Incr(len(tmp) / 64)
+	sw.sNonce.Incr(len(tmp) / EncBlockSize)
 	return sw.backing.Write(tmp)
 }
 
 func (sw *SalsaWriter) Write(p []byte) (int, error) {
 	if sw.Closed {
-		return 0, errors.New("salsawriter already closed")
+		return 0, SalsaWriterClosedError{}
 	}
 
 	var total int
@@ -100,9 +100,9 @@ func (sw *SalsaWriter) Write(p []byte) (int, error) {
 	pLen := len(p)
 	bLen := sw.buffer.Len()
 
-	if bLen > 0 && pLen+bLen >= 64 {
+	if bLen > 0 && pLen+bLen >= EncBlockSize {
 		if pLen > 0 {
-			n, _ := sw.buffer.Write(p[:64-bLen])
+			n, _ := sw.buffer.Write(p[:EncBlockSize-bLen])
 			p = p[n:]
 			pLen = len(p)
 			bLen = sw.buffer.Len()
@@ -119,8 +119,8 @@ func (sw *SalsaWriter) Write(p []byte) (int, error) {
 	}
 
 	if pLen > 0 {
-		pBlocks := pLen / 64
-		pRemainder := pLen - (pBlocks * 64)
+		pBlocks := pLen / EncBlockSize
+		pRemainder := pLen - (pBlocks * EncBlockSize)
 		pFullLen := pLen - pRemainder
 
 		n, err := sw.passEncrypted(p[:pFullLen])
@@ -139,7 +139,7 @@ func (sw *SalsaWriter) Write(p []byte) (int, error) {
 
 func (sw *SalsaWriter) Close() error {
 	if sw.Closed {
-		return errors.New("salsawriter already Closed")
+		return SalsaWriterClosedError{}
 	}
 
 	sw.encryptBuffer()
@@ -160,7 +160,7 @@ func (sw *SalsaWriter) Close() error {
 }
 
 func (sw *SalsaWriter) ReadFrom(r io.Reader) (int64, error) {
-	data := make([]byte, ChunkSize)
+	data := make([]byte, FileChunkSize)
 	total := int64(0)
 	for {
 		n, err := r.Read(data)

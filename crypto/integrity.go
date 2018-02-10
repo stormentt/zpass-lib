@@ -8,12 +8,10 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-const IntegrityKeyLength = 64
-
 type IntegrityKey []byte
 
 func NewIntegrityKey() (IntegrityKey, error) {
-	key, err := random.Bytes(IntegrityKeyLength)
+	key, err := random.Bytes(IntKeySize)
 	if err != nil {
 		return nil, err
 	}
@@ -22,16 +20,21 @@ func NewIntegrityKey() (IntegrityKey, error) {
 }
 
 func (key IntegrityKey) NewHash() (hash.Hash, error) {
+	if len(key) != IntKeySize {
+		return nil, IntKeyBadSizeError{len(key)}
+	}
+
 	return blake2b.New512(key)
 }
 
 func (key IntegrityKey) Sign(msg []byte) ([]byte, error) {
-	blake, err := blake2b.New512(key)
-	if err != nil {
-		return nil, err
+	if len(key) != IntKeySize {
+		return nil, IntKeyBadSizeError{len(key)}
 	}
 
-	_, _ = blake.Write(msg)
+	blake, _ := blake2b.New512(key)
+
+	blake.Write(msg)
 	sig := blake.Sum(nil)
 	return sig, nil
 }
@@ -50,11 +53,11 @@ func (key IntegrityKey) Verify(msg []byte, testSig []byte) (bool, error) {
 }
 
 func (key IntegrityKey) SignFile(path string) ([]byte, error) {
-	blake, err := blake2b.New512(key)
-	if err != nil {
-		return nil, err
+	if len(key) != IntKeySize {
+		return nil, IntKeyBadSizeError{len(key)}
 	}
 
+	blake, _ := blake2b.New512(key)
 	return HashFile(path, blake)
 }
 
