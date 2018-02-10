@@ -1,4 +1,5 @@
 [![GoDoc](https://godoc.org/github.com/stormentt/zpass-lib?status.svg)](https://godoc.org/github.com/stormentt/zpass-lib)
+[![pipeline status](https://git.secrecy.rocks/stormentt/zpass-lib/badges/master/pipeline.svg)](https://git.secrecy.rocks/stormentt/zpass-lib/commits/master)
 
 # zpass-lib
 utility library for the [zpass server](https://github.com/stormentt/zpass-server) &amp; [client](https://github.com/stormentt/zpass-client)
