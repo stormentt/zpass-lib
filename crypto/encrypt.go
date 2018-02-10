@@ -54,7 +54,7 @@ func (key EncryptionKey) Decrypt(msg []byte) ([]byte, error) {
 	nonce := msg[:24]
 	ciphertext := msg[24:]
 
-	plaintext := make([]byte, len(ciphertext)-EncryptionNonceLength)
+	plaintext := make([]byte, len(ciphertext))
 
 	var encKey [EncryptionKeyLength]byte
 	copy(encKey[:], []byte(key))
