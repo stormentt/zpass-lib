@@ -1,4 +1,4 @@
-package crypto
+package zcrypto
 
 import (
 	"io"

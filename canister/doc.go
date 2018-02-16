@@ -1,8 +1,7 @@
 /*
 Package canister provides a dynamically allocated nested map structure for storing and retrieving arbitrary values.
 
-Simple example usage
-
+Simple Example
 	func main() {
 		c := canister.New()
 		c.Set("user.name", "SternRottenMan")
@@ -41,6 +40,7 @@ Internally, c will look like this:
   }
 
 Retrieving values later is easy
+
 	name, ok, err := c.GetString("user.name")
 	// "SternRottenMan", true, nil
 

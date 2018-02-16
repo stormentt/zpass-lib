@@ -1,4 +1,4 @@
-package crypto
+package zcrypto
 
 import (
 	"io"
@@ -170,4 +170,20 @@ func (c *CryptoProvider) DecryptFile(inPath, outPath string) error {
 	}
 
 	return nil
+}
+
+func (c *CryptoProvider) Sign(msg []byte) ([]byte, error) {
+	return c.authPair.Sign(msg)
+}
+
+func (c *CryptoProvider) SignFile(path string) ([]byte, error) {
+	return c.authPair.SignFile(path)
+}
+
+func (c *CryptoProvider) Verify(msg, sig []byte) bool {
+	return c.authPair.Verify(msg, sig)
+}
+
+func (c *CryptoProvider) VerifyFile(path string, sig []byte) (bool, error) {
+	return c.authPair.VerifyFile(path, sig)
 }
