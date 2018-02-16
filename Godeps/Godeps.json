@@ -7,14 +7,19 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/davecgh/go-spew/spew",
+			"Comment": "v1.1.0-11-g87df7c6",
+			"Rev": "87df7c60d5820d0f8ae11afede5aa52325c09717"
+		},
+		{
 			"ImportPath": "github.com/pkg/errors",
 			"Comment": "v0.8.0-7-gf15c970",
 			"Rev": "f15c970de5b76fac0b59abb32d62c17cc7bed265"
 		},
 		{
-			"ImportPath": "github.com/sirupsen/logrus",
-			"Comment": "v1.0.3-19-g95cd2b9",
-			"Rev": "95cd2b9c79aa5e72ab0bc69b7ccc2be15bf850f6"
+			"ImportPath": "github.com/pmezard/go-difflib/difflib",
+			"Comment": "v1.0.0",
+			"Rev": "792786c7400a136282c1664665ae0a8db921c6c2"
 		},
 		{
 			"ImportPath": "github.com/spf13/cast",
@@ -31,10 +36,6 @@
 			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 		},
 		{
-			"ImportPath": "golang.org/x/crypto/chacha20poly1305",
-			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
-		},
-		{
 			"ImportPath": "golang.org/x/crypto/ed25519",
 			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 		},
@@ -43,23 +44,11 @@
 			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 		},
 		{
-			"ImportPath": "golang.org/x/crypto/pbkdf2",
-			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
-		},
-		{
-			"ImportPath": "golang.org/x/crypto/poly1305",
-			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
-		},
-		{
 			"ImportPath": "golang.org/x/crypto/salsa20",
 			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/salsa20/salsa",
-			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
-		},
-		{
-			"ImportPath": "golang.org/x/crypto/scrypt",
 			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 		},
 		{
@@ -73,20 +62,6 @@
 		{
 			"ImportPath": "golang.org/x/sys/windows",
 			"Rev": "8b4580aae2a0dd0c231a45d3ccb8434ff533b840"
-		},
-		{
-			"ImportPath": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
-			"Comment": "v1.2.0-4-g87b1dfb",
-			"Rev": "87b1dfb5b2fa649f52695dd9eae19abe404a4308"
-		},
-		{
-			"ImportPath": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
-			"Comment": "v1.2.0-4-g87b1dfb",
-			"Rev": "87b1dfb5b2fa649f52695dd9eae19abe404a4308"
-		},
-		{
-			"ImportPath": "golang.org/x/crypto/chacha20poly1305/internal/chacha20",
-			"Rev": "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 		}
 	]
 }
