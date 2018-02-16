@@ -1,6 +1,7 @@
 package canister
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -46,6 +47,16 @@ func FillFrom(path string) (*Canister, error) {
 	return Fill(string(bytes))
 }
 
+// FillFromReader reads the entirity of r and decodes it into a Canister
+func FillFromReader(r io.Reader) (*Canister, error) {
+	bytes, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return Fill(string(bytes))
+}
+
 // Release returns the json representation of a Canister
 func (c *Canister) Release() (string, error) {
 	return util.EncodeJson(c.contents)
@@ -76,6 +87,17 @@ func (c *Canister) ReleaseTo(path string) error {
 	}
 
 	return nil
+}
+
+// ReleaseToWriter encodes the canister as json and writes it to w
+func (c *Canister) ReleaseToWriter(w io.Writer) error {
+	json, err := c.Release()
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write([]byte(json))
+	return err
 }
 
 // Has returns true if the canister has a value for that property, false otherwise
