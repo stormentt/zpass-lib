@@ -8,6 +8,9 @@ import (
 	"github.com/stormentt/zpass-lib/util"
 )
 
+// Check attempts to read from crypto/rand, if it fails it returns an error
+//
+// Check should be called at the start of a program that uses this library. It's not necessary but erroring at the start of a program is preferable to only erroring once we try to generate a random value
 func Check() error {
 	b := make([]byte, 256)
 	_, err := rand.Read(b)

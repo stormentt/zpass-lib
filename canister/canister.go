@@ -1,73 +1,45 @@
-// Package canister provides easy methods to manipulate arbitrary JSON objects
 package canister
 
 import (
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"github.com/stormentt/zpass-lib/util"
 )
 
-// Canister contains a map which is converted to & from JSON
+// Canister provides a dynamically allocated nestable map
 type Canister struct {
-	Contents map[string]interface{}
+	contents map[string]interface{}
 }
 
 // New initializes & returns a new Canister
 func New() *Canister {
-	var c Canister
-	c.Contents = make(map[string]interface{})
-	return &c
+	return &Canister{make(map[string]interface{})}
 }
 
-// Release encodes the canister's contents and writes it to the specified writer, returning any error that occurs
-func (c *Canister) Release(w io.Writer) error {
-	encoder := json.NewEncoder(w)
-	err := encoder.Encode(c.Contents)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"Error": err,
-		}).Debug("Unable to release canister")
-	}
-	return err
-}
-
-// ToJSON returns the result of encoding the canister's contents to json
-func (c *Canister) ToJSON() (string, error) {
-	json, err := util.EncodeJson(c.Contents)
-	if err != nil {
-		return "", err
-	}
-	return json, nil
-}
-
-// Fill decodes a json string and stores the resulting object in a new canister's contents
+// Fill decodes an input string into a Canister
 func Fill(input string) (*Canister, error) {
-	tempMap := make(map[string]interface{})
-	err := util.DecodeJson(input, &tempMap)
+	tmp := make(map[string]interface{})
+	err := util.DecodeJson(input, &tmp)
 	if err != nil {
 		return nil, err
 	}
 
-	var c Canister
-	c.Contents = tempMap
-	return &c, nil
+	return &Canister{tmp}, nil
 }
 
-// FillFrom returns a new canister created from decoding the contents of the specified file
+// FillFrom decodes the file at path into a Canister
 func FillFrom(path string) (*Canister, error) {
-	file, err := os.Open(path)
+	in, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer in.Close()
 
-	bytes, err := ioutil.ReadAll(file)
+	bytes, err := ioutil.ReadAll(in)
 	if err != nil {
 		return nil, err
 	}
@@ -75,136 +47,149 @@ func FillFrom(path string) (*Canister, error) {
 	return Fill(string(bytes))
 }
 
-// Get returns the value of the specified property.
-// Property should be a string of the form "path.to.property". Every . represents peaking into a map, so path.to.property is looking inside the map "path" for the map "to" for the property "property".
-// Get uses the internal method find() to find the specified interface
-func (c *Canister) Get(property string) interface{} {
-	properties := strings.Split(property, ".")
-	return c.find(properties, c.Contents)
-}
-
-// Has returns true if the canister has that property, false otherwise
-func (c *Canister) Has(property string) bool {
-	value := c.Get(property)
-	if value == nil {
-		return false
-	}
-	return true
-}
-
-// GetString retrieves the specified property & casts it to string
-func (c *Canister) GetString(property string) (string, bool) {
-	found := c.Get(property)
-	if found == nil {
-		return "", false
-	}
-	return cast.ToString(found), true
-}
-
-// GetBytes retrieves the specified property & attempts to decode it from Base64 into bytes
-func (c *Canister) GetBytes(property string) ([]byte, error) {
-	str, ok := c.GetString(property)
-	if ok == false {
-		return nil, nil
-	}
-	bytes, err := util.DecodeB64(str)
+// FillFromReader reads the entirity of r and decodes it into a Canister
+func FillFromReader(r io.Reader) (*Canister, error) {
+	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	return bytes, nil
+
+	return Fill(string(bytes))
 }
 
-// GetInt retrieves the specified property & attempts to cast it as an int64
-func (c *Canister) GetInt(property string) (int64, error) {
-	found := c.Get(property)
-	return cast.ToInt64E(found)
+// Release returns the json representation of a Canister
+func (c *Canister) Release() (string, error) {
+	return util.EncodeJson(c.contents)
 }
 
-// GetFloat retrieves the specified property & attempts to cast it as a float64
-func (c *Canister) GetFloat(property string) (float64, error) {
-	found := c.Get(property)
-	return cast.ToFloat64E(found)
-}
-
-// find recursively searches a map for the specified key/value pair
-// Properties should be a list of keys in nested maps
-// Operation:
-// 1. Check if the first string in properties has a value in searchMap. If it does not, return nil
-// 2. Check the type of the associated value
-// 3. If the type is not a map, return that value
-// 4. If the type is a map, call find again on the found map
+// ReleaseTo writes the json representation of a Canister to a new file
 //
-// Example:
-// configMap:
-// {
-//   "server": {
-//     "database": {
-//       "password": "hunter2"
-//     }
-//   }
-// }
-//
-// find([]string{"server", "database", "password"}, configMap) will return "hunter2"
-// First, it would search configMap for the key "server". It would find a map.
-// Second, it would search the found map for the key "database". It would find another map.
-// Third, it would search that map for the key "password". It would find a non-map and would return that value.
-func (c *Canister) find(properties []string, searchMap map[string]interface{}) interface{} {
-	next, ok := searchMap[properties[0]]
+// If the file exists, ReleaseTo will overwrite it.
+func (c *Canister) ReleaseTo(path string) error {
+	json, err := c.Release()
+	if err != nil {
+		return err
+	}
 
-	if ok {
-		if len(properties) == 1 {
-			return next
-		}
+	out, err := os.Create(path)
+	if err != nil {
+		return err
+	}
 
-		switch next.(type) {
-		case map[interface{}]interface{}:
-			// gotta recurse bc we found a map
-			return c.find(properties[1:], cast.ToStringMap(next))
-		case map[string]interface{}:
-			// gotta recurse bc we found a map
-			return c.find(properties[1:], cast.ToStringMap(next))
-		default:
-			return next
-		}
-	} else {
-		return nil
+	_, err = out.Write([]byte(json))
+	if err != nil {
+		return err
+	}
+
+	err = out.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ReleaseToWriter encodes the canister as json and writes it to w
+func (c *Canister) ReleaseToWriter(w io.Writer) error {
+	json, err := c.Release()
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write([]byte(json))
+	return err
+}
+
+// Has returns true if the canister has a value for that property, false otherwise
+func (c *Canister) Has(property string) bool {
+	_, ok := c.Get(property)
+	return ok
+}
+
+// GetFloat64 returns the float64 representation of a property
+func (c *Canister) GetFloat64(property string) (casted float64, ok bool, err error) {
+	val, ok := c.Get(property)
+	casted, err = cast.ToFloat64E(val)
+	return
+}
+
+// GetInt64 returns the int64 representation of a property
+func (c *Canister) GetInt64(property string) (casted int64, ok bool, err error) {
+	val, ok := c.Get(property)
+	casted, err = cast.ToInt64E(val)
+	return
+}
+
+// GetBytes returns the []byte representation of a property
+func (c *Canister) GetBytes(property string) (casted []byte, ok bool, err error) {
+	castString, ok, err := c.GetString(property)
+	if !ok || err != nil {
+		return
+	}
+
+	casted = []byte(castString)
+	return
+}
+
+// GetString returns the string representation of a property
+func (c *Canister) GetString(property string) (casted string, ok bool, err error) {
+	val, ok := c.Get(property)
+	casted, err = cast.ToStringE(val)
+	return
+}
+
+// Get returns the value at the property
+func (c *Canister) Get(property string) (interface{}, bool) {
+	path := strings.Split(property, ".")
+	return c.get(path, c.contents)
+}
+
+// get searches for a map and returns the value at that property and a boolean indicating if the value was found
+func (c *Canister) get(path []string, searchMap map[string]interface{}) (interface{}, bool) {
+	next, ok := searchMap[path[0]]
+	if !ok {
+		return nil, false
+	}
+
+	if len(path) == 1 {
+		return next, true
+	}
+
+	switch next.(type) {
+	case map[interface{}]interface{}:
+		return c.get(path[1:], cast.ToStringMap(next))
+	case map[string]interface{}:
+		return c.get(path[1:], cast.ToStringMap(next))
+	default:
+		return next, true
 	}
 }
 
-// Set will associate the given property with the value
+// Set sets the property to the value
 func (c *Canister) Set(property string, value interface{}) *Canister {
-	properties := strings.Split(property, ".")
-	c.set(properties, value, c.Contents)
+	path := strings.Split(property, ".")
+	c.set(path, value, c.contents)
 	return c
 }
 
-// set follows similar rules as find, but if set doesn't find a key at one of its stages it will create a new map.
-//
-// Example
-// setMap:
-// {
-// }
-//
-// set([]string{"response", "error"}, "Unable to parse json", setMap) would create a map at the key "response" and assign "error" in that map to "Unable to parse json"
-// First, it would search the setMap for the key "response". It would find nothing, so it would create a new map at that location
-// Second, it would search the new map for the key "error". It would find nothing, so it would create a new key "error" and give it the value "Unable to parse json"
+// set dynamically allocates nested maps and sets the property's value
 func (c *Canister) set(path []string, value interface{}, setMap map[string]interface{}) {
 	next, ok := setMap[path[0]]
-	if ok == false {
+	if ok {
+		switch next.(type) {
+		case map[interface{}]interface{}:
+			c.set(path[1:], value, cast.ToStringMap(next))
+		case map[string]interface{}:
+			c.set(path[1:], value, cast.ToStringMap(next))
+		default:
+			setMap[path[0]] = value
+		}
+	} else {
 		if len(path) == 1 {
 			setMap[path[0]] = value
 		} else {
 			setMap[path[0]] = make(map[string]interface{})
 			c.set(path[1:], value, cast.ToStringMap(setMap[path[0]]))
-		}
-	} else {
-		switch next.(type) {
-		case map[interface{}]interface{}:
-			c.set(path[1:], value, cast.ToStringMap(next))
-		case map[string]interface{}:
-			c.set(path[1:], value, cast.ToStringMap(next))
-		default:
-			setMap[path[0]] = value
 		}
 	}
 }

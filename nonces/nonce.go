@@ -8,6 +8,7 @@ import (
 )
 
 //Nonce is a Value & Time pair for use as a guard against replay attacks
+//
 //Value should be randomly generated, and time should be the unix timestamp for when the nonce was made.
 type Nonce struct {
 	Value string `json:"value"`
