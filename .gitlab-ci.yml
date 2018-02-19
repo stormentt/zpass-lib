@@ -13,8 +13,11 @@ before_script:
 vet:
   stage: build
   script:
-      - godep go vet ./...
-      - golint ./...
+    - godep go vet ./...
+lint:
+  stage: build
+  script:
+    - golint ./...
 test:
   stage: test
   script:
