@@ -13,11 +13,7 @@ type IntegrityKey []byte
 
 // NewEncryptionKey generates a new random integrity key
 func NewIntegrityKey() (IntegrityKey, error) {
-	key, err := random.Bytes(IntKeySize)
-	if err != nil {
-		return nil, err
-	}
-
+	key := random.Bytes(IntKeySize)
 	return IntegrityKey(key), nil
 }
 

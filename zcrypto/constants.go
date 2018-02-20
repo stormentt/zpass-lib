@@ -13,7 +13,7 @@ const (
 	AuthSigSize  = 64
 
 	MsgOverhead  = EncNonceSize + IntHashSize
-	FileOverhead = EncNonceSize + IntHashSize + 8
+	FileOverhead = EncNonceSize + IntHashSize + 4 // 4 bytes for the int32 extraByte count
 
 	FileChunkSize = 128 * 1024
 )

@@ -17,14 +17,11 @@ func TestNewAuthPair(t *testing.T) {
 }
 
 func TestAuthPairFromBytes(t *testing.T) {
-	privBytes, err := random.Bytes(AuthFullSize)
-	assert.NoError(t, err)
+	privBytes := random.Bytes(AuthFullSize)
 
-	pubBytes, err := random.Bytes(AuthHalfSize)
-	assert.NoError(t, err)
+	pubBytes := random.Bytes(AuthHalfSize)
 
-	invalidBytes, err := random.Bytes(128)
-	assert.NoError(t, err)
+	invalidBytes := random.Bytes(128)
 
 	priv, err := AuthPairFromBytes(privBytes)
 	assert.NoError(t, err)

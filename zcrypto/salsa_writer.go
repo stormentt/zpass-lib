@@ -44,10 +44,7 @@ func NewSalsaWriter(encKey EncryptionKey, intKey IntegrityKey, backing io.WriteS
 		return nil, err
 	}
 
-	nonce, err := random.Bytes(EncNonceSize)
-	if err != nil {
-		return nil, err
-	}
+	nonce := random.Bytes(EncNonceSize)
 
 	hash, err := intKey.NewHash()
 	if err != nil {

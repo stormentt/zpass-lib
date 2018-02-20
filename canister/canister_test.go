@@ -84,8 +84,7 @@ func TestFilling(t *testing.T) {
 
 func TestBytes(t *testing.T) {
 	c := canister.New()
-	bytes, err := random.Bytes(64)
-	assert.NoError(t, err)
+	bytes := random.Bytes(64)
 	t.Logf("bytes: %x\n", bytes)
 
 	c.Set("bytes", bytes)
