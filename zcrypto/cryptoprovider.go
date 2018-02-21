@@ -31,6 +31,9 @@ func NewCryptoProvider() (*CryptoProvider, error) {
 	}
 
 	authPair, err := NewAuthPair()
+	if err != nil {
+		return nil, err
+	}
 
 	provider := CryptoProvider{
 		encryptionKey: encKey,
@@ -93,7 +96,7 @@ func (c *CryptoProvider) Decrypt(msg []byte) ([]byte, error) {
 	valid, err := c.integrityKey.Verify(ciphertext, sig)
 	if err != nil {
 		return nil, err
-	} else if valid == false {
+	} else if !valid {
 		return nil, InvalidSignatureError{sig}
 	}
 
@@ -172,18 +175,30 @@ func (c *CryptoProvider) DecryptFile(inPath, outPath string) error {
 	return nil
 }
 
+// Sign signs a message
+//
+// Sign will fail if the CryptoProvider does not have a private auth key.
 func (c *CryptoProvider) Sign(msg []byte) ([]byte, error) {
 	return c.authPair.Sign(msg)
 }
 
+// SignFile signs a file
+//
+// SignFile will fail if the CryptoProvider does not have a private auth key.
 func (c *CryptoProvider) SignFile(path string) ([]byte, error) {
 	return c.authPair.SignFile(path)
 }
 
+// Verify checks the signature of a message
+//
+// Verify will fail if the CryptoProvider does not have a public auth key.
 func (c *CryptoProvider) Verify(msg, sig []byte) bool {
 	return c.authPair.Verify(msg, sig)
 }
 
+// VerifyFile checks the signature of a file
+//
+// VerifyFile will fail if the CryptoProvider does not have a public auth key.
 func (c *CryptoProvider) VerifyFile(path string, sig []byte) (bool, error) {
 	return c.authPair.VerifyFile(path, sig)
 }

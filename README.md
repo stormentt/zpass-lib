@@ -12,6 +12,10 @@ Example:
 canister.Get("server.database.host")
 ```
 
+```
+canister.Set("device.id", 123)
+```
+
 ### Cryptography interfaces
 Zpass-lib provides two interfaces for cryptography: Crypter & Hasher. 
 Both come with functions to generate/derive appropriately sized keys & nonces.
@@ -47,7 +51,6 @@ go test zpass-lib/crypt
 ## Libraries used
 
 * [Cast](https://github.com/spf13/cast)
-* [Logrus](https://github.com/sirupsen/logrus)
 
 ## Contributing
 

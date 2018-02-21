@@ -15,12 +15,10 @@ type Nonce struct {
 	Time  int64  `json:"time"`
 }
 
-//Make returns a new Nonce timestamped with the current time and a random 32 character alphanumeric string
-func Make() (Nonce, error) {
-	var n Nonce
-	var err error
-	n.Value, err = random.AlphaNum(32)
-	n.Time = time.Now().Unix()
-
-	return n, err
+//New returns a new Nonce timestamped with the current time and a random 32 character alphanumeric string
+func New() Nonce {
+	return Nonce{
+		Value: random.AlphaNum(32),
+		Time:  time.Now().Unix(),
+	}
 }

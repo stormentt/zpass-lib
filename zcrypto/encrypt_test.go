@@ -34,7 +34,7 @@ func TestEncrypt(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, wrongPlain, msg)
 
-	badKeyBytes, err := random.Bytes(128)
+	badKeyBytes := random.Bytes(128)
 	badKey := EncryptionKey(badKeyBytes)
 
 	_, err = badKey.Encrypt(msg)

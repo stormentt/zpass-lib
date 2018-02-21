@@ -41,6 +41,13 @@ func (n *SalsaNonce) Counter() uint64 {
 	return u
 }
 
+// Copy returns a copy of this SalsaNonce
+func (n *SalsaNonce) Copy() SalsaNonce {
+	var tmp [16]byte
+	copy(tmp[:], n[:])
+	return tmp
+}
+
 // salsaSubs calculates the subkey & subnonce for a key & nonce pair
 func salsaSubs(key []byte, nonce []byte, blockCount uint64) ([EncKeySize]byte, SalsaNonce, error) {
 

@@ -11,11 +11,7 @@ type EncryptionKey []byte
 
 // NewEncryptionKey generates a new random encryption key
 func NewEncryptionKey() (EncryptionKey, error) {
-	key, err := random.Bytes(EncKeySize)
-	if err != nil {
-		return nil, err
-	}
-
+	key := random.Bytes(EncKeySize)
 	return EncryptionKey(key), nil
 }
 
@@ -29,10 +25,7 @@ func (key EncryptionKey) Encrypt(msg []byte) ([]byte, error) {
 		return nil, EncKeyBadSizeError{len(key)}
 	}
 
-	nonce, err := random.Bytes(EncNonceSize)
-	if err != nil {
-		return nil, err
-	}
+	nonce := random.Bytes(EncNonceSize)
 
 	ciphertext := make([]byte, len(msg))
 

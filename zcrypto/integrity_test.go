@@ -45,8 +45,7 @@ func TestIntegSignatures(t *testing.T) {
 	assert.False(t, valid)
 
 	// Test Bad Keys (should error every time)
-	badKeyBytes, err := random.Bytes(128)
-	assert.NoError(t, err)
+	badKeyBytes := random.Bytes(128)
 	badKey := IntegrityKey(badKeyBytes)
 
 	_, err = badKey.Sign(msg)
@@ -83,8 +82,7 @@ func TestIntegFileSignatures(t *testing.T) {
 	assert.False(t, valid)
 
 	// Test Bad Keys (should error every time)
-	badKeyBytes, err := random.Bytes(128)
-	assert.NoError(t, err)
+	badKeyBytes := random.Bytes(128)
 	badKey := IntegrityKey(badKeyBytes)
 
 	_, err = badKey.SignFile("signGoodTest")
