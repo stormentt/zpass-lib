@@ -23,7 +23,7 @@ func New() *Canister {
 // Fill decodes an input string into a Canister
 func Fill(input string) (*Canister, error) {
 	tmp := make(map[string]interface{})
-	err := util.DecodeJson(input, &tmp)
+	err := util.DecodeJSON(input, &tmp)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func FillFromReader(r io.Reader) (*Canister, error) {
 
 // Release returns the json representation of a Canister
 func (c *Canister) Release() (string, error) {
-	return util.EncodeJson(c.contents)
+	return util.EncodeJSON(c.contents)
 }
 
 // ReleaseTo writes the json representation of a Canister to a new file
