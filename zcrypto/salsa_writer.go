@@ -114,7 +114,6 @@ func (sw *SalsaWriter) Write(p []byte) (int, error) {
 			n, _ := sw.buffer.Write(p[:EncBlockSize-bLen])
 			p = p[n:]
 			pLen = len(p)
-			bLen = sw.buffer.Len()
 		}
 
 		sw.encryptBuffer()
@@ -133,7 +132,7 @@ func (sw *SalsaWriter) Write(p []byte) (int, error) {
 		pFullLen := pLen - pRemainder
 
 		n, err := sw.passEncrypted(p[:pFullLen])
-		total += int(n)
+		total += n
 		if err != nil {
 			return total, errors.WithStack(err)
 		}
@@ -163,7 +162,10 @@ func (sw *SalsaWriter) Close() error {
 		return err
 	}
 
-	sw.backing.Write(sw.hash.Sum(nil))
+	_, err = sw.backing.Write(sw.hash.Sum(nil))
+	if err != nil {
+		return err
+	}
 
 	sw.Closed = true
 	return nil

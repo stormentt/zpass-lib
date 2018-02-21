@@ -11,7 +11,7 @@ import (
 // IntegrityKey must be IntKeySize bytes long
 type IntegrityKey []byte
 
-// NewEncryptionKey generates a new random integrity key
+// NewIntegrityKey generates a new random integrity key
 func NewIntegrityKey() (IntegrityKey, error) {
 	key := random.Bytes(IntKeySize)
 	return IntegrityKey(key), nil
@@ -48,9 +48,9 @@ func (key IntegrityKey) Verify(msg []byte, testSig []byte) (bool, error) {
 
 	if hmac.Equal(compSig, testSig) {
 		return true, nil
-	} else {
-		return false, nil
 	}
+
+	return false, nil
 }
 
 // SignFile calculates the hash of a file
@@ -63,7 +63,7 @@ func (key IntegrityKey) SignFile(path string) ([]byte, error) {
 	return HashFile(path, blake)
 }
 
-// SignFile validates a file against its hash
+// VerifyFile validates a file against its hash
 func (key IntegrityKey) VerifyFile(path string, testSig []byte) (bool, error) {
 	compSig, err := key.SignFile(path)
 	if err != nil {
@@ -72,7 +72,7 @@ func (key IntegrityKey) VerifyFile(path string, testSig []byte) (bool, error) {
 
 	if hmac.Equal(compSig, testSig) {
 		return true, nil
-	} else {
-		return false, nil
 	}
+
+	return false, nil
 }

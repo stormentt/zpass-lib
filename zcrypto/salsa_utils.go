@@ -41,6 +41,7 @@ func (n *SalsaNonce) Counter() uint64 {
 	return u
 }
 
+// Copy returns a copy of this SalsaNonce
 func (n *SalsaNonce) Copy() SalsaNonce {
 	var tmp [16]byte
 	copy(tmp[:], n[:])

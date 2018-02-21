@@ -14,7 +14,7 @@ func randomCopy(out io.Writer, in io.Reader) (int64, error) {
 	data := make([]byte, FileChunkSize)
 	total := int64(0)
 	for {
-		data := data[:rand.Intn(FileChunkSize)]
+		data = data[:rand.Intn(FileChunkSize)]
 		n, err := in.Read(data)
 		if err != nil {
 			if err == io.EOF {

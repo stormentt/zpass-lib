@@ -30,7 +30,7 @@ func Bytes(n int) []byte {
 	return b
 }
 
-//ByteB64 returns a base64 encoded string containing n random bytes
+//BytesB64 returns a base64 encoded string containing n random bytes
 func BytesB64(n int) string {
 	str := util.EncodeB64(Bytes(n))
 	return str
