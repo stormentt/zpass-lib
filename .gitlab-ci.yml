@@ -6,13 +6,18 @@ stages:
 before_script:
   - apk add --update git
   - ln -s /builds /go/src/github.com
-  - go get github.com/tools/godep
+  - go get -u github.com/tools/godep
+  - go get -u github.com/golang/lint/golint
   - cd /go/src/github.com/${CI_PROJECT_PATH}
 
 vet:
   stage: build
   script:
-      - godep go vet ./...
+    - godep go vet ./...
+lint:
+  stage: build
+  script:
+    - golint ./...
 test:
   stage: test
   script:
